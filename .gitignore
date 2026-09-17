@@ -1,0 +1,16 @@
+# Build & Xcode
+.build/
+DerivedData/
+*.xcodeproj
+*.xcworkspace
+!SynologyMount.xcodeproj
+!SynologyMount.xcworkspace
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# SPM
+.swiftpm/
+Package.resolved

@@ -1,0 +1,95 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXProject section */
+		54978C3B350E4AFDA02DC137 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+			};
+			buildConfigurationList = 2EA645C4E90D4097868058D3 /* Build configuration list for PBXProject "SynologyMount" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = de;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				de,
+				en,
+				Base,
+			);
+			mainGroup = B134458CA8B741D0B5B1093F;
+			productRefGroup = F5F34F6735F243DD980842D7 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXGroup section */
+		B134458CA8B741D0B5B1093F = {
+			isa = PBXGroup;
+			children = (
+				968AE9781D5342B687D5D81A /* Sources */,
+				F5F34F6735F243DD980842D7 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		968AE9781D5342B687D5D81A /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
+		F5F34F6735F243DD980842D7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin XCBuildConfiguration section */
+		49784EA025B548F8A4EC3CE6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		1224DAA843714ECB99C33B93 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2EA645C4E90D4097868058D3 /* Build configuration list for PBXProject "SynologyMount" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				49784EA025B548F8A4EC3CE6 /* Debug */,
+				1224DAA843714ECB99C33B93 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = 54978C3B350E4AFDA02DC137 /* Project object */;
+}
