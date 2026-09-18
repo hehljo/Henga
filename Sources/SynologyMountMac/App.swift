@@ -8,33 +8,39 @@ import SwiftUI
 import AppKit
 
 @MainActor
-public final class SettingsWindowManager: ObservableObject {
+public final class SettingsWindowManager: NSObject, NSWindowDelegate {
     public static let shared = SettingsWindowManager()
     
-    private var windowController: NSWindowController?
+    private var window: NSWindow?
     
     public func showSettings(store: MountAppStore) {
-        if let wc = windowController, let window = wc.window {
+        if let existing = window, existing.isVisible {
             NSApp.activate(ignoringOtherApps: true)
-            window.makeKeyAndOrderFront(nil)
+            existing.makeKeyAndOrderFront(nil)
+            existing.orderFrontRegardless()
             return
         }
         
         let settingsView = SettingsView().environment(store)
         let hostingController = NSHostingController(rootView: settingsView)
         
-        let window = NSWindow(contentViewController: hostingController)
-        window.title = "SynologyMount Einstellungen"
-        window.setContentSize(NSSize(width: 740, height: 500))
-        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-        window.center()
-        window.isReleasedWhenClosed = false
+        let win = NSWindow(contentViewController: hostingController)
+        win.title = "SynologyMount Einstellungen"
+        win.setContentSize(NSSize(width: 760, height: 540))
+        win.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+        win.isReleasedWhenClosed = false
+        win.delegate = self
+        win.center()
         
-        let wc = NSWindowController(window: window)
-        self.windowController = wc
+        self.window = win
         
         NSApp.activate(ignoringOtherApps: true)
-        window.makeKeyAndOrderFront(nil)
+        win.makeKeyAndOrderFront(nil)
+        win.orderFrontRegardless()
+    }
+    
+    public func windowWillClose(_ notification: Notification) {
+        // Fenster behalten für schnelles Wiederöffnen
     }
 }
 

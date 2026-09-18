@@ -17,6 +17,7 @@ struct SettingsView: View {
         }
         .frame(minWidth: 720, minHeight: 520)
         .onAppear {
+            store.reloadProfiles()
             if selectedProfileId == nil, let first = store.profiles.first {
                 selectedProfileId = first.id
             }
@@ -74,6 +75,7 @@ struct SettingsView: View {
                 store.deleteProfile(id: pid)
                 selectedProfileId = store.profiles.first?.id
             }
+            .id(pid)
         } else {
             VStack(spacing: 16) {
                 Image(systemName: "externaldrive.connected.to.line.below")
@@ -301,7 +303,12 @@ struct ProfileDetailEditView: View {
                     self.showOtpPrompt = false
                     self.otpCode = ""
                     self.isDetectingShares = false
+                    
+                    if !self.password.isEmpty {
+                        _ = KeychainHelper.shared.savePassword(self.password, for: self.profile.username)
+                    }
                     self.onSave(self.profile)
+                    self.showSavedNotice = true
                 }
             } catch SynoClientError.twoFactorRequired {
                 await MainActor.run {
