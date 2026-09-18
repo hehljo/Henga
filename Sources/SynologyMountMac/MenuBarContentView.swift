@@ -14,6 +14,8 @@ struct MenuBarContentView: View {
             Divider()
             sharesSection
             Divider()
+            finderFolderSection
+            Divider()
             actionsSection
         }
         .padding(14)
@@ -22,6 +24,7 @@ struct MenuBarContentView: View {
             store.reloadProfiles()
             Task {
                 await store.syncMounts()
+                updateFinderLinks()
             }
         }
     }
@@ -41,7 +44,6 @@ struct MenuBarContentView: View {
     
     @ViewBuilder
     private var sharesSection: some View {
-        // Filtere alle Freigaben aus aktiven Profilen
         let allShares = store.profiles.flatMap { p in
             p.shares.map { (profile: p, share: $0) }
         }
@@ -76,7 +78,10 @@ struct MenuBarContentView: View {
                     
                     Button {
                         store.reloadProfiles()
-                        Task { await store.syncMounts() }
+                        Task { 
+                            await store.syncMounts()
+                            updateFinderLinks()
+                        }
                     } label: {
                         Image(systemName: "arrow.clockwise")
                             .font(.caption2)
@@ -92,7 +97,7 @@ struct MenuBarContentView: View {
                         }
                     }
                 }
-                .frame(maxHeight: 280)
+                .frame(maxHeight: 240)
                 
                 HStack {
                     Button(String(localized: "menu_mount_all", defaultValue: "Alle verbinden")) {
@@ -112,6 +117,23 @@ struct MenuBarContentView: View {
                 .padding(.top, 4)
             }
         }
+    }
+    
+    @ViewBuilder
+    private var finderFolderSection: some View {
+        HStack {
+            Image(systemName: "folder.badge.gearshape")
+                .foregroundColor(.accentColor)
+            Text(AppConfig.brandName)
+                .font(.system(size: 12, weight: .medium))
+            Spacer()
+            Button(String(localized: "open_in_finder", defaultValue: "Im Finder öffnen")) {
+                FinderSidebarHelper.shared.openInFinder()
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.mini)
+        }
+        .padding(.vertical, 2)
     }
     
     @ViewBuilder
@@ -144,7 +166,10 @@ struct MenuBarContentView: View {
                 .help(String(localized: "open_in_finder", defaultValue: "Im Finder öffnen"))
                 
                 Button {
-                    Task { try? await store.unmountShare(share, from: profile) }
+                    Task {
+                        try? await store.unmountShare(share, from: profile)
+                        updateFinderLinks()
+                    }
                 } label: {
                     Image(systemName: "eject.fill")
                         .foregroundColor(.secondary)
@@ -153,7 +178,10 @@ struct MenuBarContentView: View {
                 .help(String(localized: "menu_unmount_all", defaultValue: "Trennen"))
             } else {
                 Button {
-                    Task { try? await store.mountShare(share, from: profile) }
+                    Task {
+                        try? await store.mountShare(share, from: profile)
+                        updateFinderLinks()
+                    }
                 } label: {
                     Image(systemName: "play.circle.fill")
                         .foregroundColor(.green)
@@ -206,6 +234,19 @@ struct MenuBarContentView: View {
         SettingsWindowManager.shared.showSettings(store: store)
     }
     
+    private func updateFinderLinks() {
+        var active: [(name: String, path: String)] = []
+        for profile in store.profiles {
+            for share in profile.shares {
+                if store.statuses[share.id]?.state == .mounted {
+                    let path = MountPointSanitizer.resolveMountPoint(for: share)
+                    active.append((name: share.name, path: path))
+                }
+            }
+        }
+        FinderSidebarHelper.shared.updateFinderLinks(activeMountPoints: active)
+    }
+    
     private func mountAll() {
         Task {
             for profile in store.profiles where profile.isEnabled {
@@ -213,6 +254,7 @@ struct MenuBarContentView: View {
                     try? await store.mountShare(share, from: profile)
                 }
             }
+            updateFinderLinks()
         }
     }
     
@@ -223,6 +265,7 @@ struct MenuBarContentView: View {
                     try? await store.unmountShare(share, from: profile)
                 }
             }
+            updateFinderLinks()
         }
     }
 }

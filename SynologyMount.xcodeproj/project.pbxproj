@@ -22,6 +22,7 @@
 		51B4A028A5C8A85430699904 /* ProfileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD8D52B9C3CA3051CBA33475 /* ProfileManager.swift */; };
 		ECF165A2B4DF7F5D8E555453 /* MountAppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47938F68069AA47ACE6C88A1 /* MountAppStore.swift */; };
 		06BDF3414AF06B6E1BB6C7EF /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E832A677B59B3583669CDA9 /* App.swift */; };
+		61D908834321E02A55A28795 /* FinderSidebarHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C9262AF7D6F17E2593C643E /* FinderSidebarHelper.swift */; };
 		FC728625ED01782CF32D68BF /* MenuBarContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36A739761CC0FFE75A6E709 /* MenuBarContentView.swift */; };
 		EA142C71B50C90DE04AC3C93 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DCB50C040BAFD9449B8D2 /* SettingsView.swift */; };
 		0DD2AAF55A8E64A252953C04 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A18DA67ECD20B2D481F60392 /* Assets.xcassets */; };
@@ -45,6 +46,7 @@
 		CD8D52B9C3CA3051CBA33475 /* ProfileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ProfileManager.swift"; path = "Sources/SynologyMountCore/Storage/ProfileManager.swift"; sourceTree = SOURCE_ROOT; };
 		47938F68069AA47ACE6C88A1 /* MountAppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "MountAppStore.swift"; path = "Sources/SynologyMountCore/Store/MountAppStore.swift"; sourceTree = SOURCE_ROOT; };
 		3E832A677B59B3583669CDA9 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "App.swift"; path = "Sources/SynologyMountMac/App.swift"; sourceTree = SOURCE_ROOT; };
+		2C9262AF7D6F17E2593C643E /* FinderSidebarHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "FinderSidebarHelper.swift"; path = "Sources/SynologyMountMac/FinderSidebarHelper.swift"; sourceTree = SOURCE_ROOT; };
 		C36A739761CC0FFE75A6E709 /* MenuBarContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "MenuBarContentView.swift"; path = "Sources/SynologyMountMac/MenuBarContentView.swift"; sourceTree = SOURCE_ROOT; };
 		A71DCB50C040BAFD9449B8D2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SettingsView.swift"; path = "Sources/SynologyMountMac/SettingsView.swift"; sourceTree = SOURCE_ROOT; };
 		A18DA67ECD20B2D481F60392 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "Assets.xcassets"; path = "Sources/SynologyMountMac/Assets.xcassets"; sourceTree = SOURCE_ROOT; };
@@ -97,6 +99,7 @@
 			isa = PBXGroup;
 			children = (
 				3E832A677B59B3583669CDA9 /* App.swift */,
+				2C9262AF7D6F17E2593C643E /* FinderSidebarHelper.swift */,
 				C36A739761CC0FFE75A6E709 /* MenuBarContentView.swift */,
 				A71DCB50C040BAFD9449B8D2 /* SettingsView.swift */,
 				A18DA67ECD20B2D481F60392 /* Assets.xcassets */,
@@ -196,6 +199,7 @@
 				51B4A028A5C8A85430699904 /* ProfileManager.swift in Sources */,
 				ECF165A2B4DF7F5D8E555453 /* MountAppStore.swift in Sources */,
 				06BDF3414AF06B6E1BB6C7EF /* App.swift in Sources */,
+				61D908834321E02A55A28795 /* FinderSidebarHelper.swift in Sources */,
 				FC728625ED01782CF32D68BF /* MenuBarContentView.swift in Sources */,
 				EA142C71B50C90DE04AC3C93 /* SettingsView.swift in Sources */,
 			);

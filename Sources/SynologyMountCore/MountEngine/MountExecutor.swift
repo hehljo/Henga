@@ -21,7 +21,6 @@ public protocol MountExecutor: Sendable {
 
 #if os(macOS)
 // Dynamisches Laden von NetFSMountURLSync via dlsym aus /System/Library/Frameworks/NetFS.framework/NetFS
-// Dadurch entfällt ein hartes Linker-Flag im Xcode-Projekt!
 private typealias NetFSMountFunc = @convention(c) (
     CFURL,
     CFURL?,
@@ -42,8 +41,13 @@ private func invokeNetFSMount(url: CFURL, user: CFString, pass: CFString, mountp
         return nil
     }
     
+    // Unterdrücke das interaktive macOS-Authentifizierungs-Popup
+    let openOptions = NSMutableDictionary()
+    let mountOptions = NSMutableDictionary()
+    mountOptions.setValue(kCFBooleanTrue, forKey: "UIOptionSuppress")
+    
     let mountFunc = unsafeBitCast(sym, to: NetFSMountFunc.self)
-    return mountFunc(url, nil, user, pass, nil, nil, &mountpoints)
+    return mountFunc(url, nil, user, pass, openOptions as CFMutableDictionary, mountOptions as CFMutableDictionary, &mountpoints)
 }
 #endif
 
@@ -122,9 +126,9 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
             if let status = invokeNetFSMount(url: cfUrl, user: cfUser, pass: cfPass, mountpoints: &mountpoints) {
                 if status == 0 {
                     if let arrayRef = mountpoints?.takeRetainedValue() as? [String], let firstPath = arrayRef.first {
-                        print("[SynologyMount] 🎉 NetFSMount erfolgreich! Gemountet unter: \(firstPath) (sichtbar im Finder unter Orte)")
+                        print("[SynologyMount] 🎉 NetFSMount erfolgreich! Gemountet unter: \(firstPath)")
                     } else {
-                        print("[SynologyMount] 🎉 NetFSMount erfolgreich! (sichtbar im Finder unter Orte)")
+                        print("[SynologyMount] 🎉 NetFSMount erfolgreich!")
                     }
                     return
                 } else {
