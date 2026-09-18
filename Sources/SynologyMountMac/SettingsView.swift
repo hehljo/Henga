@@ -49,7 +49,6 @@ struct SettingsView: View {
             
             Divider()
             
-            // Fester Footer-Button in der Sidebar (wie in Apple Mail / Xcode)
             HStack {
                 Button {
                     createNewProfile()
@@ -106,7 +105,7 @@ struct SettingsView: View {
     }
     
     private func createNewProfile() {
-        let newP = ServerProfile(name: "Meine DiskStation", host: "diskstation.local", username: "admin")
+        let newP = ServerProfile(name: "Meine DiskStation", host: "192.168.1.6", username: "admin")
         store.saveProfile(newP)
         selectedProfileId = newP.id
     }
@@ -123,6 +122,7 @@ struct ProfileDetailEditView: View {
     @State private var showOtpPrompt = false
     @State private var isDetectingShares = false
     @State private var detectionError: String?
+    @State private var copiedToClipboard = false
     
     var body: some View {
         Form {
@@ -206,9 +206,34 @@ struct ProfileDetailEditView: View {
             }
             
             if let err = detectionError {
-                Text(err)
-                    .foregroundColor(.red)
-                    .font(.caption)
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.red)
+                        Text(err)
+                            .foregroundColor(.red)
+                            .font(.caption)
+                            .textSelection(.enabled)
+                        
+                        Spacer()
+                        
+                        Button {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(err, forType: .string)
+                            copiedToClipboard = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                copiedToClipboard = false
+                            }
+                        } label: {
+                            Label(copiedToClipboard ? "Kopiert!" : "Fehler kopieren", systemImage: copiedToClipboard ? "checkmark" : "doc.on.doc")
+                                .font(.caption2)
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+                .padding(8)
+                .background(Color.red.opacity(0.1))
+                .cornerRadius(6)
             }
             
             Section {

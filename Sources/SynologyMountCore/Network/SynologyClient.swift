@@ -64,7 +64,7 @@ public actor SynologyClient {
         #endif
     }
     
-    /// Ruft SYNO.API.Info ab (Meta-Discovery laut Guideline, um exakte Pfade und Versionen zu ermitteln)
+    /// Ruft SYNO.API.Info ab (Meta-Discovery laut Guideline)
     public func discoverApis(query: String = "SYNO.FileStation,SYNO.API.Auth") async -> [String: SynoApiInfoResult] {
         guard let baseURL = profile.dsmBaseURL else { return [:] }
         var comp = URLComponents(url: baseURL.appendingPathComponent("query.cgi"), resolvingAgainstBaseURL: false)
@@ -74,9 +74,16 @@ public actor SynologyClient {
             URLQueryItem(name: "method", value: "query"),
             URLQueryItem(name: "query", value: query)
         ]
-        guard let url = comp?.url, let (data, _) = try? await session.data(from: url) else {
+        guard let url = comp?.url else { return [:] }
+        
+        print("[SynologyMount] 🔍 Sende SYNO.API.Info Discovery an: \(url)")
+        guard let (data, response) = try? await session.data(from: url) else {
+            print("[SynologyMount] ⚠️ SYNO.API.Info Anfrage fehlgeschlagen (Netzwerk/Timeout)")
             return [:]
         }
+        
+        let rawStr = String(data: data, encoding: .utf8) ?? ""
+        print("[SynologyMount] 📥 SYNO.API.Info Antwort: \(rawStr.prefix(200))")
         
         struct InfoResponse: Codable {
             let success: Bool
@@ -109,8 +116,10 @@ public actor SynologyClient {
         
         if let savedDid = profile.deviceID, !savedDid.isEmpty {
             queryItems.append(URLQueryItem(name: "device_id", value: savedDid))
+            print("[SynologyMount] 🔑 Verwende gespeicherten 2FA-Geräte-Token (did) – kein OTP nötig.")
         } else if let otp = otpCode?.trimmingCharacters(in: .whitespacesAndNewlines), !otp.isEmpty {
             queryItems.append(URLQueryItem(name: "otp_code", value: otp))
+            print("[SynologyMount] 🔢 Sende OTP Code für 2FA...")
         }
         
         var comp = URLComponents(url: baseURL.appendingPathComponent("auth.cgi"), resolvingAgainstBaseURL: false)
@@ -120,21 +129,27 @@ public actor SynologyClient {
             throw SynoClientError.invalidHost
         }
         
+        print("[SynologyMount] 🔐 Sende Login-Anfrage an \(baseURL) (User: \(profile.username), 2FA-Token: \(profile.deviceID != nil ? "Ja" : "Nein"))...")
+        
         let (data, response) = try await session.data(from: url)
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
             throw SynoClientError.networkError("HTTP Status ungültig")
         }
         
+        let rawStr = String(data: data, encoding: .utf8) ?? ""
+        print("[SynologyMount] 📥 Login-Antwort: \(rawStr)")
+        
         let apiResp: SynoApiResponse<SynoAuthResponse>
         do {
             apiResp = try JSONDecoder().decode(SynoApiResponse<SynoAuthResponse>.self, from: data)
         } catch {
-            let raw = String(data: data.prefix(200), encoding: .utf8) ?? ""
-            throw SynoClientError.decodingError("Login-Antwort: \(raw)")
+            print("[SynologyMount] ❌ JSON-Decode Fehler beim Login: \(rawStr)")
+            throw SynoClientError.decodingError("Login-Antwort: \(rawStr)")
         }
         
         guard apiResp.success, let authData = apiResp.data else {
             let code = apiResp.error?.code ?? -1
+            print("[SynologyMount] ⚠️ Login schlug fehl mit Synology Fehlercode: \(code)")
             if code == 403 {
                 throw SynoClientError.twoFactorRequired
             } else if code == 404 {
@@ -147,11 +162,13 @@ public actor SynologyClient {
         let did = authData.did ?? authData.deviceId
         if let token = did, !token.isEmpty {
             self.profile.deviceID = token
+            print("[SynologyMount] 🏷️ 2FA-Gerätetoken (did) erhalten und gespeichert.")
         }
+        print("[SynologyMount] ✅ Login erfolgreich! Session ID erhalten.")
         return (authData.sid, did)
     }
     
-    /// Holt Liste aller freigegebenen gemeinsamen Ordner (Shared Folders) mit Versions-Discovery und flexiblen JSON-Formaten
+    /// Holt Liste aller freigegebenen gemeinsamen Ordner (Shared Folders)
     public func listSharedFolders() async throws -> [SynoSharedFolder] {
         guard let baseURL = profile.dsmBaseURL else {
             throw SynoClientError.invalidHost
@@ -160,7 +177,6 @@ public actor SynologyClient {
             throw SynoClientError.unauthenticated
         }
         
-        // 1. Meta-Discovery für SYNO.FileStation.List abrufen
         if apiInfoCache.isEmpty {
             _ = await discoverApis(query: "SYNO.FileStation.List")
         }
@@ -182,12 +198,15 @@ public actor SynologyClient {
             throw SynoClientError.invalidHost
         }
         
+        print("[SynologyMount] 📡 Rufe Freigaben ab via \(url)...")
         let (data, _) = try await session.data(from: url)
+        let rawStr = String(data: data, encoding: .utf8) ?? ""
+        print("[SynologyMount] 📥 list_share Antwort: \(rawStr.prefix(300))")
         
-        // Flexible Decoding Strategie für unterschiedliche DSM Versionen
         // Variante A: { "data": { "shares": [ ... ] } }
         if let apiResp = try? JSONDecoder().decode(SynoApiResponse<SynoSharedFoldersData>.self, from: data),
            apiResp.success, let shareData = apiResp.data {
+            print("[SynologyMount] ✅ \(shareData.shares.count) Freigaben gefunden (Format A)!")
             return shareData.shares.map {
                 SynoSharedFolder(name: $0.name, path: $0.path, isDir: $0.isdir)
             }
@@ -201,22 +220,23 @@ public actor SynologyClient {
         }
         if let directResp = try? JSONDecoder().decode(DirectListResponse.self, from: data),
            directResp.success, let entries = directResp.data {
+            print("[SynologyMount] ✅ \(entries.count) Freigaben gefunden (Format B)!")
             return entries.map {
                 SynoSharedFolder(name: $0.name, path: $0.path, isDir: $0.isdir)
             }
         }
         
-        // Fehler auswerten falls Synology API Error gemeldet hat
         struct GenericErrorResp: Codable {
             let success: Bool
             let error: SynoApiErrorPayload?
         }
         if let errResp = try? JSONDecoder().decode(GenericErrorResp.self, from: data), !errResp.success {
             let code = errResp.error?.code ?? -1
+            print("[SynologyMount] ❌ Fehler von FileStation.list_share: \(code)")
             throw SynoClientError.serverError(code, "FileStation list_share")
         }
         
-        let rawSnippet = String(data: data.prefix(150), encoding: .utf8) ?? "Keine lesbaren Daten"
-        throw SynoClientError.decodingError(rawSnippet)
+        print("[SynologyMount] ❌ Unbekannte Antwortstruktur: \(rawStr)")
+        throw SynoClientError.decodingError(rawStr)
     }
 }
