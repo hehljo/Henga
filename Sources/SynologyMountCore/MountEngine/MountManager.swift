@@ -1,41 +1,16 @@
 import Foundation
 
-public struct ShareRuntimeStatus: Identifiable, Equatable, Sendable {
-    public var id: UUID { share.id }
-    public let share: ShareMount
-    public let profileId: UUID
-    public var state: MountState
-    public var mountPoint: String
-    public var lastError: String?
-    
-    public init(
-        share: ShareMount,
-        profileId: UUID,
-        state: MountState = .disconnected,
-        mountPoint: String,
-        lastError: String? = nil
-    ) {
-        self.share = share
-        self.profileId = profileId
-        self.state = state
-        self.mountPoint = mountPoint
-        self.lastError = lastError
-    }
-}
-
 public actor MountManager {
     public static let shared = MountManager()
     
-    private let executor: MountExecuting
+    private let executor: MountExecutor
     private let reachability: NetworkReachability
     private let keychain: KeychainHelper
-    private var isLoopRunning = false
     
-    // Status-Tracking
     private var statuses: [UUID: ShareRuntimeStatus] = [:]
     
     public init(
-        executor: MountExecuting = DefaultMountExecutor(),
+        executor: MountExecutor = DefaultMountExecutor.shared,
         reachability: NetworkReachability = .shared,
         keychain: KeychainHelper = .shared
     ) {
@@ -45,16 +20,17 @@ public actor MountManager {
     }
     
     public func getStatus(for shareId: UUID) -> ShareRuntimeStatus? {
-        statuses[shareId]
+        return statuses[shareId]
     }
     
     public func getAllStatuses() -> [ShareRuntimeStatus] {
-        Array(statuses.values)
+        return Array(statuses.values)
     }
     
-    /// Synchronisiert den aktuellen Zustand aller konfigurierten Shares mit den echten macOS Mounts
+    /// Synchronisiert die internen Status mit den tatsächlichen OS-Mounts
     public func refreshMountStatuses(profiles: [ServerProfile]) async {
         let activeMounts = await executor.listMountedVolumes()
+        print("[SynologyMount] 🔍 Aktive System-Mounts gefunden (\(activeMounts.count)): \(activeMounts.map { "\($0.mountPoint) (\($0.fileSystemType))" })")
         
         for profile in profiles {
             for share in profile.shares {
@@ -64,27 +40,24 @@ public actor MountManager {
                 var status = statuses[share.id] ?? ShareRuntimeStatus(
                     share: share,
                     profileId: profile.id,
-                    state: .disconnected,
+                    state: isMounted ? .mounted : .disconnected,
                     mountPoint: targetPath
                 )
                 
+                status.state = isMounted ? .mounted : (status.state == .connecting ? .connecting : .disconnected)
                 if isMounted {
-                    status.state = .mounted
+                    status.lastMountedAt = Date()
                     status.lastError = nil
-                } else if status.state == .mounted {
-                    // War gemountet, ist jetzt weg
-                    status.state = .disconnected
                 }
-                
-                status.mountPoint = targetPath
                 statuses[share.id] = status
             }
         }
     }
     
-    /// Mountet eine spezifische Freigabe
+    /// Mountet eine bestimmte Freigabe
     public func mount(share: ShareMount, profile: ServerProfile, password: String? = nil) async throws {
         guard let url = profile.smbURL(for: share) else {
+            print("[SynologyMount] ❌ Ungültige SMB-URL für '\(share.name)': Host oder Pfad leer")
             throw SynoClientError.invalidHost
         }
         
@@ -93,6 +66,7 @@ public actor MountManager {
         
         // 1. Bereits am Ziel gemountet?
         if activeMounts.contains(where: { $0.mountPoint == targetPath }) {
+            print("[SynologyMount] ℹ️ Freigabe '\(share.name)' ist bereits unter \(targetPath) gemountet.")
             var status = statuses[share.id] ?? ShareRuntimeStatus(share: share, profileId: profile.id, state: .mounted, mountPoint: targetPath)
             status.state = .mounted
             status.lastError = nil
@@ -111,11 +85,15 @@ public actor MountManager {
         
         // 4. Passwort ermitteln (übergeben oder aus Keychain)
         let pw = password ?? keychain.getPassword(for: profile.username)
+        if pw == nil || pw?.isEmpty == true {
+            print("[SynologyMount] ⚠️ Kein Passwort im Keychain gefunden für User '\(profile.username)'. Mount wird als Gast/anonym versucht...")
+        }
         
         do {
             try await executor.mountVolume(url: url, mountPoint: targetPath, username: profile.username, password: pw)
             status.state = .mounted
             status.lastError = nil
+            status.lastMountedAt = Date()
             statuses[share.id] = status
         } catch {
             status.state = .error
@@ -153,11 +131,13 @@ public actor MountManager {
         for profile in profiles where profile.isEnabled {
             // Prüfen ob Host im Netzwerk antwortet
             let isReachable = await reachability.checkHostReachable(host: profile.cleanHost, port: profile.smbPort)
+            print("[SynologyMount] 🌐 Host \(profile.cleanHost):\(profile.smbPort) Erreichbarkeits-Check: \(isReachable ? "ONLINE ✅" : "OFFLINE ❌")")
             guard isReachable else { continue }
             
             for share in profile.shares where share.autoMount {
                 let current = statuses[share.id]?.state ?? .disconnected
                 if current == .disconnected || current == .error {
+                    print("[SynologyMount] 🔄 Auto-Mounting aktiviert für '\(share.name)'...")
                     try? await mount(share: share, profile: profile)
                 }
             }
