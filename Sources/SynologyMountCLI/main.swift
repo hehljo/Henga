@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(SynologyMountCore)
 import SynologyMountCore
+#endif
 
 @main
 struct SynologyMountCLI {
