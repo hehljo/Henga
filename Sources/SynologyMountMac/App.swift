@@ -7,6 +7,37 @@ import SynologyMountCore
 import SwiftUI
 import AppKit
 
+@MainActor
+public final class SettingsWindowManager: ObservableObject {
+    public static let shared = SettingsWindowManager()
+    
+    private var windowController: NSWindowController?
+    
+    public func showSettings(store: MountAppStore) {
+        if let wc = windowController, let window = wc.window {
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+            return
+        }
+        
+        let settingsView = SettingsView().environment(store)
+        let hostingController = NSHostingController(rootView: settingsView)
+        
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "SynologyMount Einstellungen"
+        window.setContentSize(NSSize(width: 740, height: 500))
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+        window.center()
+        window.isReleasedWhenClosed = false
+        
+        let wc = NSWindowController(window: window)
+        self.windowController = wc
+        
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
+}
+
 @main
 struct SynologyMountApp: App {
     @State private var store = MountAppStore()
@@ -21,13 +52,6 @@ struct SynologyMountApp: App {
             }
         }
         .menuBarExtraStyle(.window)
-        
-        Window("SynologyMount Einstellungen", id: "settings-window") {
-            SettingsView()
-                .environment(store)
-        }
-        .windowResizability(.contentSize)
-        .defaultPosition(.center)
     }
     
     private var menuBarIconName: String {

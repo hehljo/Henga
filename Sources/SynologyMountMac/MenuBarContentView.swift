@@ -7,7 +7,6 @@ import SynologyMountCore
 
 struct MenuBarContentView: View {
     @Environment(MountAppStore.self) private var store
-    @Environment(\.openWindow) private var openWindow
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -170,8 +169,7 @@ struct MenuBarContentView: View {
     }
     
     private func openSettingsWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-        openWindow(id: "settings-window")
+        SettingsWindowManager.shared.showSettings(store: store)
     }
 }
 #endif

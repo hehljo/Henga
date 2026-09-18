@@ -77,7 +77,7 @@ public actor SynologyClient {
         guard let url = comp?.url else { return [:] }
         
         print("[SynologyMount] 🔍 Sende SYNO.API.Info Discovery an: \(url)")
-        guard let (data, response) = try? await session.data(from: url) else {
+        guard let (data, _) = try? await session.data(from: url) else {
             print("[SynologyMount] ⚠️ SYNO.API.Info Anfrage fehlgeschlagen (Netzwerk/Timeout)")
             return [:]
         }
