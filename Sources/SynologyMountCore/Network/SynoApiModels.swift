@@ -8,12 +8,16 @@ public struct SynoApiResponse<T: Codable & Sendable>: Codable, Sendable {
 
 public struct SynoApiErrorPayload: Codable, Sendable {
     public let code: Int
-    public let errors: [SynoSubError]?
+    public let errors: SynoErrorDetail?
 }
 
-public struct SynoSubError: Codable, Sendable {
-    public let code: Int
-    public let path: String?
+public struct SynoErrorDetail: Codable, Sendable {
+    public let token: String?
+    public let types: [SynoErrorType]?
+}
+
+public struct SynoErrorType: Codable, Sendable {
+    public let type: String?
 }
 
 public struct SynoAuthResponse: Codable, Sendable {

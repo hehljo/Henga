@@ -16,14 +16,14 @@ public enum SynoClientError: Error, LocalizedError, Equatable {
         case .networkError(let msg):
             return "Netzwerkfehler: \(msg)"
         case .twoFactorRequired:
-            return "2-Faktor-Authentifizierung (2FA) erforderlich. Bitte 6-stelligen OTP Code eingeben (403)."
+            return "2-Faktor-Authentifizierung (2FA) aktiv: Bitte 6-stelligen OTP Code eingeben (403)."
         case .invalidTwoFactorCode:
             return "Ungültiger 2FA / OTP Code. Bitte Code prüfen (404)."
         case .serverError(let code, let msg):
             let detail = msg != nil ? " - \(msg!)" : ""
             switch code {
             case 400: return "Ungültiger Benutzername oder Passwort (400)\(detail)"
-            case 403: return "2-Faktor-Authentifizierung (2FA) aktiv: Bitte 6-stelligen OTP-Code eingeben (403)\(detail)"
+            case 403: return "2-Faktor-Authentifizierung (2FA) aktiv: Bitte 6-stelligen OTP Code eingeben (403)\(detail)"
             case 404: return "Ungültiger 2FA / OTP Code. Bitte Code prüfen (404)\(detail)"
             default: return "Synology Fehlercode \(code)\(detail)"
             }
@@ -111,6 +111,7 @@ public actor SynologyClient {
             URLQueryItem(name: "passwd", value: password),
             URLQueryItem(name: "session", value: "FileStation"),
             URLQueryItem(name: "format", value: "sid"),
+            URLQueryItem(name: "enable_device_token", value: "yes"),
             URLQueryItem(name: "device_name", value: profile.deviceName)
         ]
         

@@ -5,6 +5,34 @@ import Foundation
 @Suite("Adversarial & Sabotage Tests for SynologyMount (Mutation & Resiliency)")
 struct MountSabotageTests {
     
+    @Test("Sabotage: DSM 7 2FA 403 response with JWT token payload must decode cleanly into SynoApiResponse")
+    func testDsm7TwoFactorPayloadDecoding() {
+        let dsm7TwoFactorJson = """
+        {
+            "error": {
+                "code": 403,
+                "errors": {
+                    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.test",
+                    "types": [
+                        { "type": "authenticator" },
+                        { "type": "otp" }
+                    ]
+                }
+            },
+            "success": false
+        }
+        """.data(using: .utf8)!
+        
+        struct DummyData: Codable {}
+        let response = try? JSONDecoder().decode(SynoApiResponse<DummyData>.self, from: dsm7TwoFactorJson)
+        
+        #expect(response != nil)
+        #expect(response?.success == false)
+        #expect(response?.error?.code == 403)
+        #expect(response?.error?.errors?.token?.contains("eyJ") == true)
+        #expect(response?.error?.errors?.types?.first?.type == "authenticator")
+    }
+    
     @Test("Sabotage: Malformed DSM API JSON must safely fail decoding without crash")
     func testMalformedApiResponse() {
         let corruptJson = """
@@ -31,11 +59,9 @@ struct MountSabotageTests {
     
     @Test("Sabotage: Path traversal and injection attacks in remotePath must be sanitized")
     func testPathInjectionSabotage() {
-        // Versuch von ../../../ Verzeichnis-Traversal
         let evilShare = ShareMount(name: "Evil", remotePath: "../../etc/shadow")
         let sanitized = MountPointSanitizer.resolveMountPoint(for: evilShare)
         
-        // Muss im /Volumes/ Pfad bleiben und darf keine relativen Traversals enthalten
         #expect(!sanitized.contains(".."))
         #expect(sanitized.hasPrefix("/Volumes/"))
     }
@@ -49,7 +75,6 @@ struct MountSabotageTests {
     
     @Test("Sabotage: Orphaned directory check protects non-empty folders")
     func testOrphanedProtection() {
-        // Verzeichnis mit Inhalt darf NIE als verwaist markiert werden
         let tempDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("orphan_test_\(UUID().uuidString)")
         try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let dummyFile = tempDir.appendingPathComponent("important_data.txt")
