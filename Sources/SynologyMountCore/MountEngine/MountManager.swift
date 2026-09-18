@@ -35,16 +35,23 @@ public actor MountManager {
         for profile in profiles {
             for share in profile.shares {
                 let targetPath = MountPointSanitizer.resolveMountPoint(for: share)
-                let isMounted = activeMounts.contains { $0.mountPoint == targetPath }
+                
+                // Erkennt sowohl den Zielpfad als auch bestehende /Volumes Mounts
+                let existingMount = activeMounts.first { 
+                    $0.mountPoint == targetPath || $0.matches(shareName: share.cleanRemotePath) 
+                }
+                let isMounted = existingMount != nil
+                let effectivePath = existingMount?.mountPoint ?? targetPath
                 
                 var status = statuses[share.id] ?? ShareRuntimeStatus(
                     share: share,
                     profileId: profile.id,
                     state: isMounted ? .mounted : .disconnected,
-                    mountPoint: targetPath
+                    mountPoint: effectivePath
                 )
                 
                 status.state = isMounted ? .mounted : (status.state == .connecting ? .connecting : .disconnected)
+                status.mountPoint = effectivePath
                 if isMounted {
                     status.lastMountedAt = Date()
                     status.lastError = nil
@@ -65,10 +72,11 @@ public actor MountManager {
         let activeMounts = await executor.listMountedVolumes()
         
         // 1. Bereits am Ziel gemountet?
-        if activeMounts.contains(where: { $0.mountPoint == targetPath }) {
-            print("[SynologyMount] ℹ️ Freigabe '\(share.name)' ist bereits unter \(targetPath) gemountet.")
-            var status = statuses[share.id] ?? ShareRuntimeStatus(share: share, profileId: profile.id, state: .mounted, mountPoint: targetPath)
+        if let existing = activeMounts.first(where: { $0.mountPoint == targetPath || $0.matches(shareName: share.cleanRemotePath) }) {
+            print("[SynologyMount] ℹ️ Freigabe '\(share.name)' ist bereits unter \(existing.mountPoint) gemountet.")
+            var status = statuses[share.id] ?? ShareRuntimeStatus(share: share, profileId: profile.id, state: .mounted, mountPoint: existing.mountPoint)
             status.state = .mounted
+            status.mountPoint = existing.mountPoint
             status.lastError = nil
             statuses[share.id] = status
             return
@@ -103,24 +111,47 @@ public actor MountManager {
         }
     }
     
-    /// Hängt eine Freigabe aus
+    /// Hängt eine Freigabe aus (auch alte /Volumes Mounts)
     public func unmount(share: ShareMount, profileId: UUID, force: Bool = false) async throws {
         let targetPath = MountPointSanitizer.resolveMountPoint(for: share)
+        let activeMounts = await executor.listMountedVolumes()
+        
+        // Finde alle Pfade, auf denen dieses Share liegt (neuer Pfad + alter /Volumes Pfad)
+        var pathsToUnmount: [String] = []
+        if activeMounts.contains(where: { $0.mountPoint == targetPath }) {
+            pathsToUnmount.append(targetPath)
+        }
+        for m in activeMounts where m.matches(shareName: share.cleanRemotePath) {
+            if !pathsToUnmount.contains(m.mountPoint) {
+                pathsToUnmount.append(m.mountPoint)
+            }
+        }
+        if pathsToUnmount.isEmpty {
+            pathsToUnmount.append(targetPath)
+        }
         
         var status = statuses[share.id] ?? ShareRuntimeStatus(share: share, profileId: profileId, state: .unmounting, mountPoint: targetPath)
         status.state = .unmounting
         statuses[share.id] = status
         
-        do {
-            try await executor.unmountVolume(mountPoint: targetPath, force: force)
+        var lastErr: Error?
+        for path in pathsToUnmount {
+            do {
+                try await executor.unmountVolume(mountPoint: path, force: force)
+            } catch {
+                lastErr = error
+            }
+        }
+        
+        if let err = lastErr {
+            status.state = .error
+            status.lastError = err.localizedDescription
+            statuses[share.id] = status
+            throw err
+        } else {
             status.state = .disconnected
             status.lastError = nil
             statuses[share.id] = status
-        } catch {
-            status.state = .error
-            status.lastError = error.localizedDescription
-            statuses[share.id] = status
-            throw error
         }
     }
     

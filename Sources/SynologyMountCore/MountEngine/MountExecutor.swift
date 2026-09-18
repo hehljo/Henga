@@ -2,14 +2,21 @@ import Foundation
 
 public struct ActiveMountInfo: Identifiable, Equatable, Sendable {
     public var id: String { mountPoint }
-    public let serverURL: String       // z.B. "smb://diskstation.local/video"
-    public let mountPoint: String      // z.B. "/Users/.../Mounts/video"
+    public let serverURL: String       // z.B. "//user@192.168.1.6/Daten"
+    public let mountPoint: String      // z.B. "/Volumes/Daten"
     public let fileSystemType: String  // z.B. "smbfs"
     
     public init(serverURL: String, mountPoint: String, fileSystemType: String) {
         self.serverURL = serverURL
         self.mountPoint = mountPoint
         self.fileSystemType = fileSystemType
+    }
+    
+    /// Prüft ob diese Verbindung zu einem bestimmten Share (z.B. "/Daten" oder "Daten") gehört
+    public func matches(shareName: String) -> Bool {
+        let clean = shareName.trimmingCharacters(in: CharacterSet(charactersIn: "/ ")).lowercased()
+        let urlLower = serverURL.lowercased()
+        return urlLower.hasSuffix("/\(clean)") || urlLower.contains("/\(clean)@")
     }
 }
 
@@ -77,7 +84,6 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
     }
     
     /// Mountet isoliert via `/sbin/mount_smbfs` direkt in den isolierten User-Cache
-    /// Dadurch werden keine Geister-Laufwerke in "MacBook Air von Johannes" erzeugt!
     public func mountVolume(url: URL, mountPoint: String, username: String, password: String?) async throws {
         guard let host = url.host else {
             throw SynoClientError.invalidHost
@@ -124,7 +130,7 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
             try? fm.removeItem(atPath: mountPoint)
             throw SynoClientError.networkError("Mount fehlgeschlagen (Code \(process.terminationStatus)): \(trimmedMsg)")
         } else {
-            print("[SynologyMount] 🎉 Isolierter Mount erfolgreich: \(mountPoint) (Systemübersicht bleibt sauber!)")
+            print("[SynologyMount] 🎉 Isolierter Mount erfolgreich: \(mountPoint)")
         }
     }
     
