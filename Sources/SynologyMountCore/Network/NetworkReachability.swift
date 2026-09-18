@@ -8,7 +8,7 @@ public final class NetworkReachability: @unchecked Sendable {
     
     #if canImport(Network)
     private var pathMonitor: NWPathMonitor?
-    private let monitorQueue = DispatchQueue(label: "de.condriano.SynologyMount.reachability")
+    private let monitorQueue = DispatchQueue(label: "com.hehljo.SynologyMount.reachability")
     #endif
     
     private let lock = NSLock()

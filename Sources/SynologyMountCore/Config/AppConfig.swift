@@ -3,8 +3,8 @@ import Foundation
 public enum AppConfig {
     public static let brandName = "SynologyMount"
     public static let appVersion = "1.0.0"
-    public static let bundleIdentifier = "de.condriano.SynologyMount"
-    public static let keychainService = "de.condriano.SynologyMount.keychain"
+    public static let bundleIdentifier = "com.hehljo.SynologyMount"
+    public static let keychainService = "com.hehljo.SynologyMount.keychain"
     
     // Default Mount Options
     public static let defaultMountRoot = "/Volumes"
