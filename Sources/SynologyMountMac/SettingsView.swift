@@ -8,7 +8,6 @@ import SynologyMountCore
 struct SettingsView: View {
     @Environment(MountAppStore.self) private var store
     @State private var selectedProfileId: UUID?
-    @State private var isAddingProfile = false
     
     var body: some View {
         NavigationSplitView {
@@ -16,32 +15,54 @@ struct SettingsView: View {
         } detail: {
             detailSection
         }
-        .frame(minWidth: 650, minHeight: 450)
+        .frame(minWidth: 720, minHeight: 480)
+        .onAppear {
+            if selectedProfileId == nil, let first = store.profiles.first {
+                selectedProfileId = first.id
+            }
+        }
     }
     
     @ViewBuilder
     private var sidebarSection: some View {
-        List(selection: $selectedProfileId) {
-            Section(String(localized: "tab_servers", defaultValue: "Synology Server")) {
-                ForEach(store.profiles) { profile in
-                    NavigationLink(value: profile.id) {
-                        HStack {
-                            Image(systemName: "server.rack")
-                            Text(profile.name)
+        VStack(spacing: 0) {
+            List(selection: $selectedProfileId) {
+                Section(String(localized: "tab_servers", defaultValue: "Synology Server")) {
+                    ForEach(store.profiles) { profile in
+                        NavigationLink(value: profile.id) {
+                            HStack {
+                                Image(systemName: "server.rack")
+                                    .foregroundColor(profile.isEnabled ? .primary : .secondary)
+                                VStack(alignment: .leading) {
+                                    Text(profile.name)
+                                        .font(.system(size: 13, weight: .medium))
+                                    Text(profile.cleanHost)
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            .listStyle(.sidebar)
+            
+            Divider()
+            
+            // Fester Footer-Button in der Sidebar (wie in Apple Mail / Xcode)
+            HStack {
                 Button {
                     createNewProfile()
                 } label: {
-                    Image(systemName: "plus")
+                    Label(String(localized: "btn_add_server", defaultValue: "Server hinzufügen"), systemImage: "plus")
                 }
-                .help(String(localized: "btn_add_server", defaultValue: "Server hinzufügen"))
+                .buttonStyle(.borderless)
+                .controlSize(.small)
+                
+                Spacer()
             }
+            .padding(10)
+            .background(Color(NSColor.controlBackgroundColor))
         }
     }
     
@@ -52,25 +73,40 @@ struct SettingsView: View {
                 store.saveProfile(updated)
             } onDelete: {
                 store.deleteProfile(id: pid)
-                selectedProfileId = nil
+                selectedProfileId = store.profiles.first?.id
             }
         } else {
-            VStack(spacing: 12) {
+            VStack(spacing: 16) {
                 Image(systemName: "externaldrive.connected.to.line.below")
-                    .font(.system(size: 48))
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 56))
+                    .foregroundColor(.accentColor)
+                
                 Text(String(localized: "settings_title", defaultValue: "SynologyMount Einstellungen"))
-                    .font(.headline)
-                Text(String(localized: "lbl_select_server_placeholder", defaultValue: "Wählen Sie einen Server aus der Liste oder erstellen Sie einen neuen."))
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text(String(localized: "lbl_select_server_placeholder", defaultValue: "Kein Server ausgewählt. Klicken Sie auf den Button, um Ihre DiskStation hinzuzufügen:"))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+                
+                Button {
+                    createNewProfile()
+                } label: {
+                    Label(String(localized: "btn_add_server", defaultValue: "Server hinzufügen"), systemImage: "plus.circle.fill")
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.regular)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
     
     private func createNewProfile() {
-        let newP = ServerProfile(name: "Neue DiskStation", host: "diskstation.local", username: "admin")
+        let newP = ServerProfile(name: "Meine DiskStation", host: "diskstation.local", username: "admin")
         store.saveProfile(newP)
         selectedProfileId = newP.id
     }
@@ -129,6 +165,12 @@ struct ProfileDetailEditView: View {
             }
             
             Section(header: Text(String(localized: "menu_shares", defaultValue: "Freigaben (Shares)"))) {
+                if profile.shares.isEmpty {
+                    Text(String(localized: "lbl_no_shares", defaultValue: "Noch keine Freigaben hinzugefügt."))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
                 ForEach($profile.shares) { $share in
                     HStack {
                         VStack(alignment: .leading) {
@@ -150,7 +192,7 @@ struct ProfileDetailEditView: View {
                 }
                 
                 HStack {
-                    Button(String(localized: "btn_add_share", defaultValue: "Freigabe hinzufügen")) {
+                    Button(String(localized: "btn_add_share", defaultValue: "Freigabe manuell hinzufügen")) {
                         profile.shares.append(ShareMount(name: "Neue Freigabe", remotePath: "share"))
                     }
                     
