@@ -55,7 +55,6 @@ def main():
     TARGET_DEBUG_CONFIG_ID = make_id("CONFIG_TARGET_DEBUG_SYNO_MOUNT")
     TARGET_RELEASE_CONFIG_ID = make_id("CONFIG_TARGET_RELEASE_SYNO_MOUNT")
     
-    # File References & Build Files
     file_refs = {}
     build_files = {}
     
@@ -198,7 +197,7 @@ def main():
     lines.append("\t\t\tisa = PBXProject;")
     lines.append("\t\t\tattributes = {")
     lines.append("\t\t\t\tBuildIndependentTargetsInParallel = 1;")
-    lines.append("\t\t\t\tLastUpgradeCheck = 1600;")
+    lines.append("\t\t\t\tLastUpgradeCheck = 1500;")
     lines.append("\t\t\t\tTargetAttributes = {")
     lines.append(f"\t\t\t\t\t{TARGET_ID} = {{")
     lines.append("\t\t\t\t\t\tCreatedOnToolsVersion = 15.0;")
@@ -309,11 +308,12 @@ def main():
     lines.append("\t\t\tisa = XCBuildConfiguration;")
     lines.append("\t\t\tbuildSettings = {")
     lines.append("\t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;")
+    lines.append("\t\t\t\tCODE_SIGN_ENTITLEMENTS = \"Sources/SynologyMountMac/App.entitlements\";")
     lines.append("\t\t\t\tCODE_SIGN_IDENTITY = \"-\";")
     lines.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
     lines.append("\t\t\t\tCOMBINE_HIDPI_IMAGES = YES;")
     lines.append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;")
-    lines.append("\t\t\t\tENABLE_HARDENED_RUNTIME = NO;")
+    lines.append("\t\t\t\tENABLE_HARDENED_RUNTIME = YES;")
     lines.append("\t\t\t\tGENERATE_INFOPLIST_FILE = NO;")
     lines.append("\t\t\t\tINFOPLIST_FILE = \"Sources/SynologyMountMac/Info.plist\";")
     lines.append("\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (")
@@ -321,7 +321,7 @@ def main():
     lines.append("\t\t\t\t\t\"@executable_path/../Frameworks\",")
     lines.append("\t\t\t\t);")
     lines.append("\t\t\t\tMARKETING_VERSION = 1.0;")
-    lines.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = de.condriano.SynologyMount;")
+    lines.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.hehljo.SynologyMount;")
     lines.append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
     lines.append("\t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;")
     lines.append("\t\t\t\tSWIFT_VERSION = 5.0;")
@@ -333,11 +333,12 @@ def main():
     lines.append("\t\t\tisa = XCBuildConfiguration;")
     lines.append("\t\t\tbuildSettings = {")
     lines.append("\t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;")
+    lines.append("\t\t\t\tCODE_SIGN_ENTITLEMENTS = \"Sources/SynologyMountMac/App.entitlements\";")
     lines.append("\t\t\t\tCODE_SIGN_IDENTITY = \"-\";")
     lines.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
     lines.append("\t\t\t\tCOMBINE_HIDPI_IMAGES = YES;")
     lines.append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;")
-    lines.append("\t\t\t\tENABLE_HARDENED_RUNTIME = NO;")
+    lines.append("\t\t\t\tENABLE_HARDENED_RUNTIME = YES;")
     lines.append("\t\t\t\tGENERATE_INFOPLIST_FILE = NO;")
     lines.append("\t\t\t\tINFOPLIST_FILE = \"Sources/SynologyMountMac/Info.plist\";")
     lines.append("\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (")
@@ -345,7 +346,7 @@ def main():
     lines.append("\t\t\t\t\t\"@executable_path/../Frameworks\",")
     lines.append("\t\t\t\t);")
     lines.append("\t\t\t\tMARKETING_VERSION = 1.0;")
-    lines.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = de.condriano.SynologyMount;")
+    lines.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.hehljo.SynologyMount;")
     lines.append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
     lines.append("\t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;")
     lines.append("\t\t\t\tSWIFT_VERSION = 5.0;")
@@ -391,7 +392,7 @@ def main():
     # Create Shared Scheme
     scheme_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1600"
+   LastUpgradeVersion = "1500"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
