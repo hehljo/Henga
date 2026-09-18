@@ -2,29 +2,34 @@ import Foundation
 
 public final class MountPointSanitizer: @unchecked Sendable {
     
-    /// Ermittelt den Ziel-Mountpoint und verhindert macOS-Doppelungen (`/Volumes/share-1`, etc.)
-    public static func resolveMountPoint(for share: ShareMount, defaultRoot: String = AppConfig.defaultMountRoot) -> String {
+    /// Ermittelt den Ziel-Mountpoint im Benutzerverzeichnis (unter ~/Library/Caches/SynologyMount/Mounts/)
+    /// Dadurch entfällt das /Volumes/-Root-Rechteproblem UND die Systemübersicht bleibt 100% sauber!
+    public static func resolveMountPoint(for share: ShareMount, defaultRoot: String? = nil) -> String {
         if let custom = share.customLocalMountPoint, !custom.isEmpty {
             return (custom as NSString).standardizingPath
         }
         
-        let safeName = sanitizeFolderName(share.cleanRemotePath)
-        return "\(defaultRoot)/\(safeName)"
+        let safeName = sanitizeFolderName(share.name.isEmpty ? share.cleanRemotePath : share.name)
+        
+        if let root = defaultRoot {
+            return (root as NSString).appendingPathComponent(safeName)
+        }
+        
+        // Isoliertes Verzeichnis im User-Home
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let isolatedMounts = home.appendingPathComponent("Library/Application Support/SynologyMount/Mounts", isDirectory: true)
+        return isolatedMounts.appendingPathComponent(safeName).path
     }
     
-    /// Bereinigt Namen von ungültigen Zeichen für POSIX/macOS Pfade und verhindert Traversal
-    public static func sanitizeFolderName(_ raw: String) -> String {
-        var cleaned = raw.trimmingCharacters(in: CharacterSet(charactersIn: "/ "))
-        // Path traversal Versuche eliminieren
-        cleaned = cleaned.replacingOccurrences(of: "..", with: "")
-        // Schräger Slash und Doppelpunkt durch Unterstrich ersetzen (z.B. homes/alice -> homes_alice)
-        cleaned = cleaned.replacingOccurrences(of: "/", with: "_")
-        cleaned = cleaned.replacingOccurrences(of: ":", with: "_")
-        cleaned = cleaned.trimmingCharacters(in: CharacterSet(charactersIn: "_ "))
-        return cleaned.isEmpty ? "share" : cleaned
+    /// Bereinigt Namen von Sonderzeichen für Dateipfade
+    public static func sanitizeFolderName(_ name: String) -> String {
+        let invalidCharacters = CharacterSet(charactersIn: "\\/:*?\"<>|")
+        let cleaned = name.components(separatedBy: invalidCharacters).joined(separator: "_")
+        let trimmed = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Share" : trimmed
     }
     
-    /// Prüft ob ein Verzeichnis ein toter/verwaister Mountpoint ist (Verzeichnis existiert, aber ist nicht gemountet und leer)
+    /// Prüft ob ein Verzeichnis ein toter/verwaister Mountpoint ist
     public static func isOrphanedDirectory(at path: String, activeMounts: [ActiveMountInfo]) -> Bool {
         let fm = FileManager.default
         var isDir: ObjCBool = false
@@ -32,24 +37,24 @@ public final class MountPointSanitizer: @unchecked Sendable {
             return false
         }
         
-        // Ist das Verzeichnis in der Liste der aktuell gemounteten Dateisysteme?
-        let isActivelyMounted = activeMounts.contains { $0.mountPoint == path }
-        if isActivelyMounted {
+        // Wenn es aktiv gemountet ist -> NICHT verwaist
+        if activeMounts.contains(where: { $0.mountPoint == path }) {
             return false
         }
         
-        // Prüfen ob Verzeichnis leer ist
-        guard let contents = try? fm.contentsOfDirectory(atPath: path), contents.isEmpty else {
-            return false // Hat Inhalte, nicht löschen!
+        // Wenn es nicht gemountet ist, aber leer ist -> verwaist!
+        if let contents = try? fm.contentsOfDirectory(atPath: path) {
+            return contents.isEmpty
         }
         
-        return true
+        return false
     }
     
     /// Räumt verwaiste Geister-Ordner vor einem neuen Mount-Versuch auf
     public static func cleanupOrphanedMountPointIfNeeded(at path: String, activeMounts: [ActiveMountInfo]) {
         if isOrphanedDirectory(at: path, activeMounts: activeMounts) {
             try? FileManager.default.removeItem(atPath: path)
+            print("[SynologyMount] 🧹 Verwaister toter Mountpoint entfernt: \(path)")
         }
     }
 }

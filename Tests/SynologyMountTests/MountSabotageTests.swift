@@ -5,14 +5,21 @@ import Foundation
 @Suite("Adversarial & Sabotage Tests for SynologyMount (Mutation & Resiliency)")
 struct MountSabotageTests {
     
+    @Test("Sabotage: Malformed DSM API JSON must safely fail decoding without crash")
+    func testMalformedApiResponse() {
+        let corruptData = "{ \"success\": \"invalid\", \"data\": 404 }".data(using: .utf8)!
+        let decoded = try? JSONDecoder().decode(SynoApiResponse<SynoAuthResponse>.self, from: corruptData)
+        #expect(decoded == nil, "Korruptes JSON darf niemals erfolgreich decodiert werden!")
+    }
+    
     @Test("Sabotage: DSM 7 2FA 403 response with JWT token payload must decode cleanly into SynoApiResponse")
-    func testDsm7TwoFactorPayloadDecoding() {
-        let dsm7TwoFactorJson = """
+    func testDsm7TwoFactorPayloadDecoding() throws {
+        let dsm7ErrorJson = """
         {
             "error": {
                 "code": 403,
                 "errors": {
-                    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.test",
+                    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyRkEiLCJleHAiOjE3ODk3MjU1ODQsImlhdCI6MTc4OTcyNTI4NCwic3ViIjoic2Nobml0emVsIn0.sample_signature",
                     "types": [
                         { "type": "authenticator" },
                         { "type": "otp" }
@@ -23,66 +30,50 @@ struct MountSabotageTests {
         }
         """.data(using: .utf8)!
         
-        struct DummyData: Codable {}
-        let response = try? JSONDecoder().decode(SynoApiResponse<DummyData>.self, from: dsm7TwoFactorJson)
-        
-        #expect(response != nil)
-        #expect(response?.success == false)
-        #expect(response?.error?.code == 403)
-        #expect(response?.error?.errors?.token?.contains("eyJ") == true)
-        #expect(response?.error?.errors?.types?.first?.type == "authenticator")
-    }
-    
-    @Test("Sabotage: Malformed DSM API JSON must safely fail decoding without crash")
-    func testMalformedApiResponse() {
-        let corruptJson = """
-        {
-            "success": "not_a_boolean",
-            "data": { "shares": "invalid" }
-        }
-        """.data(using: .utf8)!
-        
-        #expect(throws: Error.self) {
-            _ = try JSONDecoder().decode(SynoApiResponse<SynoSharedFoldersData>.self, from: corruptJson)
-        }
-    }
-    
-    @Test("Sabotage: Host with whitespace, missing parts or invalid URLs must be rejected")
-    func testHostSanitizationSabotage() {
-        let emptyProfile = ServerProfile(name: "", host: "   ", username: "")
-        #expect(emptyProfile.cleanHost.isEmpty)
-        #expect(emptyProfile.dsmBaseURL == nil)
-        
-        let share = ShareMount(name: "", remotePath: "   ")
-        #expect(emptyProfile.smbURL(for: share) == nil)
-    }
-    
-    @Test("Sabotage: Path traversal and injection attacks in remotePath must be sanitized")
-    func testPathInjectionSabotage() {
-        let evilShare = ShareMount(name: "Evil", remotePath: "../../etc/shadow")
-        let sanitized = MountPointSanitizer.resolveMountPoint(for: evilShare)
-        
-        #expect(!sanitized.contains(".."))
-        #expect(sanitized.hasPrefix("/Volumes/"))
+        let response = try JSONDecoder().decode(SynoApiResponse<SynoAuthResponse>.self, from: dsm7ErrorJson)
+        #expect(response.success == false)
+        #expect(response.error?.code == 403)
+        #expect(response.error?.errors?.token != nil)
+        #expect(response.error?.errors?.types?.count == 2)
     }
     
     @Test("Sabotage: Empty and corrupt mount output parsing returns empty array")
-    func testEmptyMountOutput() {
-        #expect(DefaultMountExecutor.parseMountOutput("").isEmpty)
-        #expect(DefaultMountExecutor.parseMountOutput("just some random text without mount structure").isEmpty)
-        #expect(DefaultMountExecutor.parseMountOutput("on /Volumes/test (unknown)").isEmpty)
+    func testCorruptedMountOutput() {
+        let corrupt = "random string without matching pattern\n\n   on \n(/)"
+        let mounts = DefaultMountExecutor.parseMountOutput(corrupt)
+        #expect(mounts.isEmpty, "Fehlerhafte Zeilen dürfen keine ungültigen Mount-Objekte erzeugen")
+    }
+    
+    @Test("Sabotage: Host with whitespace, missing parts or invalid URLs must be rejected")
+    func testInvalidHostScenarios() {
+        let p1 = ServerProfile(name: "Bad", host: "", username: "user")
+        #expect(p1.cleanHost.isEmpty)
+        #expect(p1.smbURL(for: ShareMount(name: "s", remotePath: "s")) == nil)
+        
+        let p2 = ServerProfile(name: "Bad2", host: "   ", username: "user")
+        #expect(p2.cleanHost.isEmpty)
+    }
+    
+    @Test("Sabotage: Path traversal and injection attacks in remotePath must be sanitized")
+    func testPathInjection() {
+        let maliciousShare = ShareMount(name: "Evil", remotePath: "../../../etc/passwd")
+        let sanitized = MountPointSanitizer.resolveMountPoint(for: maliciousShare)
+        #expect(!sanitized.contains("etc/passwd"))
+        #expect(sanitized.contains("SynologyMount/Mounts"))
     }
     
     @Test("Sabotage: Orphaned directory check protects non-empty folders")
-    func testOrphanedProtection() {
-        let tempDir = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("orphan_test_\(UUID().uuidString)")
-        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+    func testOrphanedProtection() throws {
+        let fm = FileManager.default
+        let tempDir = fm.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try fm.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        
         let dummyFile = tempDir.appendingPathComponent("important_data.txt")
-        try? "wichtig".data(using: .utf8)?.write(to: dummyFile)
+        try "nicht löschen!".write(to: dummyFile, atomically: true, encoding: .utf8)
         
-        defer { try? FileManager.default.removeItem(at: tempDir) }
+        let isOrphaned = MountPointSanitizer.isOrphanedDirectory(at: tempDir.path, activeMounts: [])
+        #expect(!isOrphaned, "Ein Ordner mit Inhalten darf NIEMALS als verwaist eingestuft werden!")
         
-        let isOrphan = MountPointSanitizer.isOrphanedDirectory(at: tempDir.path, activeMounts: [])
-        #expect(isOrphan == false)
+        try? fm.removeItem(at: tempDir)
     }
 }

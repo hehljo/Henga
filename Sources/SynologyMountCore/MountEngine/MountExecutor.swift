@@ -3,7 +3,7 @@ import Foundation
 public struct ActiveMountInfo: Identifiable, Equatable, Sendable {
     public var id: String { mountPoint }
     public let serverURL: String       // z.B. "smb://diskstation.local/video"
-    public let mountPoint: String      // z.B. "/Volumes/video"
+    public let mountPoint: String      // z.B. "/Users/.../Mounts/video"
     public let fileSystemType: String  // z.B. "smbfs"
     
     public init(serverURL: String, mountPoint: String, fileSystemType: String) {
@@ -18,37 +18,6 @@ public protocol MountExecutor: Sendable {
     func mountVolume(url: URL, mountPoint: String, username: String, password: String?) async throws
     func unmountVolume(mountPoint: String, force: Bool) async throws
 }
-
-#if os(macOS)
-// Dynamisches Laden von NetFSMountURLSync via dlsym aus /System/Library/Frameworks/NetFS.framework/NetFS
-private typealias NetFSMountFunc = @convention(c) (
-    CFURL,
-    CFURL?,
-    CFString?,
-    CFString?,
-    CFMutableDictionary?,
-    CFMutableDictionary?,
-    UnsafeMutablePointer<Unmanaged<CFArray>?>?
-) -> Int32
-
-private func invokeNetFSMount(url: CFURL, user: CFString, pass: CFString, mountpoints: inout Unmanaged<CFArray>?) -> Int32? {
-    guard let handle = dlopen("/System/Library/Frameworks/NetFS.framework/NetFS", RTLD_LAZY) else {
-        return nil
-    }
-    defer { dlclose(handle) }
-    
-    guard let sym = dlsym(handle, "NetFSMountURLSync") else {
-        return nil
-    }
-    
-    let openOptions = NSMutableDictionary()
-    let mountOptions = NSMutableDictionary()
-    mountOptions.setValue(kCFBooleanTrue, forKey: "UIOptionSuppress")
-    
-    let mountFunc = unsafeBitCast(sym, to: NetFSMountFunc.self)
-    return mountFunc(url, nil, user, pass, openOptions as CFMutableDictionary, mountOptions as CFMutableDictionary, &mountpoints)
-}
-#endif
 
 public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
     public static let shared = DefaultMountExecutor()
@@ -84,7 +53,7 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             guard !trimmed.isEmpty else { continue }
             
-            // Format: //user@host/share on /Volumes/share (smbfs, nodev, nosuid, mounted by user)
+            // Format: //user@host/share on /path/to/mount (smbfs, nodev, nosuid, mounted by user)
             let parts = trimmed.components(separatedBy: " on ")
             guard parts.count == 2 else { continue }
             
@@ -107,39 +76,16 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
         return results
     }
     
-    /// Mountet via Apple NetFS API (erzeugt /Volumes/Share mit echten macOS Rechten ohne mkdir-Permission-Fehler)
+    /// Mountet isoliert via `/sbin/mount_smbfs` direkt in den isolierten User-Cache
+    /// Dadurch werden keine Geister-Laufwerke in "MacBook Air von Johannes" erzeugt!
     public func mountVolume(url: URL, mountPoint: String, username: String, password: String?) async throws {
         guard let host = url.host else {
             throw SynoClientError.invalidHost
         }
         let share = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         
-        #if os(macOS)
-        let smbUrlString = "smb://\(host)/\(share)"
-        if let cfUrl = URL(string: smbUrlString) as CFURL? {
-            let cfUser = username as CFString
-            let cfPass = (password ?? "") as CFString
-            var mountpoints: Unmanaged<CFArray>?
-            
-            print("[SynologyMount] 🍏 Führe Apple NetFS Mount aus: smb://\(username):***@\(host)/\(share)...")
-            if let status = invokeNetFSMount(url: cfUrl, user: cfUser, pass: cfPass, mountpoints: &mountpoints) {
-                if status == 0 {
-                    if let arrayRef = mountpoints?.takeRetainedValue() as? [String], let firstPath = arrayRef.first {
-                        print("[SynologyMount] 🎉 NetFS Mount erfolgreich unter: \(firstPath)!")
-                    } else {
-                        print("[SynologyMount] 🎉 NetFS Mount erfolgreich!")
-                    }
-                    return
-                } else {
-                    print("[SynologyMount] ⚠️ NetFS Mount lieferte Fehlercode \(status)")
-                }
-            }
-        }
-        #endif
-        
-        // Fallback: Wenn mountPoint nicht unter /Volumes liegt (z.B. User-Folder), per mount_smbfs
         let fm = FileManager.default
-        if !fm.fileExists(atPath: mountPoint) && !mountPoint.hasPrefix("/Volumes/") {
+        if !fm.fileExists(atPath: mountPoint) {
             try fm.createDirectory(atPath: mountPoint, withIntermediateDirectories: true)
         }
         
@@ -152,7 +98,7 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
         
         let smbSource = "//\(userPart)@\(host)/\(share)"
         let safeLogSource = "//\(username):***@\(host)/\(share)"
-        print("[SynologyMount] ⚙️ Fallback mount_smbfs: \(safeLogSource) -> \(mountPoint)")
+        print("[SynologyMount] ⚙️ Führe isolierten Mount aus: \(safeLogSource) -> \(mountPoint)")
         
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/sbin/mount_smbfs")
@@ -175,12 +121,10 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
             let errMsg = String(data: errData, encoding: .utf8) ?? "Unbekannter Fehler"
             let trimmedMsg = errMsg.trimmingCharacters(in: .whitespacesAndNewlines)
             print("[SynologyMount] ❌ mount_smbfs fehlgeschlagen (Code \(process.terminationStatus)): \(trimmedMsg)")
-            if !mountPoint.hasPrefix("/Volumes/") {
-                try? fm.removeItem(atPath: mountPoint)
-            }
+            try? fm.removeItem(atPath: mountPoint)
             throw SynoClientError.networkError("Mount fehlgeschlagen (Code \(process.terminationStatus)): \(trimmedMsg)")
         } else {
-            print("[SynologyMount] 🎉 Mount erfolgreich auf Zielpfad \(mountPoint)!")
+            print("[SynologyMount] 🎉 Isolierter Mount erfolgreich: \(mountPoint) (Systemübersicht bleibt sauber!)")
         }
     }
     
@@ -206,12 +150,10 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
             throw SynoClientError.networkError("umount fehlgeschlagen: \(errMsg)")
         }
         
-        if mountPoint.hasPrefix("/Volumes/") {
-            let fm = FileManager.default
-            if let contents = try? fm.contentsOfDirectory(atPath: mountPoint), contents.isEmpty {
-                try? fm.removeItem(atPath: mountPoint)
-                print("[SynologyMount] 🧹 Leeren Mountpoint entfernt: \(mountPoint)")
-            }
+        let fm = FileManager.default
+        if let contents = try? fm.contentsOfDirectory(atPath: mountPoint), contents.isEmpty {
+            try? fm.removeItem(atPath: mountPoint)
+            print("[SynologyMount] 🧹 Leeren Mountpoint entfernt: \(mountPoint)")
         }
     }
 }
