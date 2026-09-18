@@ -38,13 +38,21 @@ public actor SynologyClient {
     private var profile: ServerProfile
     private var sid: String?
     private let session: URLSession
+    private let sessionDelegate: SynologySessionDelegate
     
     public init(profile: ServerProfile) {
         self.profile = profile
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 10.0
         config.timeoutIntervalForResource = 15.0
+        
+        let delegate = SynologySessionDelegate(allowSelfSigned: true)
+        self.sessionDelegate = delegate
+        #if os(macOS)
+        self.session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
+        #else
         self.session = URLSession(configuration: config)
+        #endif
     }
     
     /// Login bei Synology DSM WebAPI mit 2FA/OTP- und "Gerät merken" (did) Unterstützung

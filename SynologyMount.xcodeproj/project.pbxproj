@@ -18,6 +18,7 @@
 		0AB90B60A2628BD21C22B88B /* NetworkReachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7E70B3AA94B43841F793C3 /* NetworkReachability.swift */; };
 		85F72BEC631D67CB69D4C6B7 /* SynoApiModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 167BB053E9CBEB02E50924BF /* SynoApiModels.swift */; };
 		475ABD962D035790CA19EA58 /* SynologyClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5D42BEE24F825091A1E272 /* SynologyClient.swift */; };
+		6C7FA6ED01CDFF0662CC1AD9 /* SynologySessionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A264B115C3CACE8022B17217 /* SynologySessionDelegate.swift */; };
 		8AE11F849E7E376747D1EE47 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FE125BA265122D69FB5DC68 /* KeychainHelper.swift */; };
 		51B4A028A5C8A85430699904 /* ProfileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD8D52B9C3CA3051CBA33475 /* ProfileManager.swift */; };
 		ECF165A2B4DF7F5D8E555453 /* MountAppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47938F68069AA47ACE6C88A1 /* MountAppStore.swift */; };
@@ -45,6 +46,7 @@
 		4E7E70B3AA94B43841F793C3 /* NetworkReachability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "NetworkReachability.swift"; path = "Sources/SynologyMountCore/Network/NetworkReachability.swift"; sourceTree = SOURCE_ROOT; };
 		167BB053E9CBEB02E50924BF /* SynoApiModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SynoApiModels.swift"; path = "Sources/SynologyMountCore/Network/SynoApiModels.swift"; sourceTree = SOURCE_ROOT; };
 		7B5D42BEE24F825091A1E272 /* SynologyClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SynologyClient.swift"; path = "Sources/SynologyMountCore/Network/SynologyClient.swift"; sourceTree = SOURCE_ROOT; };
+		A264B115C3CACE8022B17217 /* SynologySessionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SynologySessionDelegate.swift"; path = "Sources/SynologyMountCore/Network/SynologySessionDelegate.swift"; sourceTree = SOURCE_ROOT; };
 		3FE125BA265122D69FB5DC68 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "KeychainHelper.swift"; path = "Sources/SynologyMountCore/Storage/KeychainHelper.swift"; sourceTree = SOURCE_ROOT; };
 		CD8D52B9C3CA3051CBA33475 /* ProfileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ProfileManager.swift"; path = "Sources/SynologyMountCore/Storage/ProfileManager.swift"; sourceTree = SOURCE_ROOT; };
 		47938F68069AA47ACE6C88A1 /* MountAppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "MountAppStore.swift"; path = "Sources/SynologyMountCore/Store/MountAppStore.swift"; sourceTree = SOURCE_ROOT; };
@@ -89,6 +91,7 @@
 				4E7E70B3AA94B43841F793C3 /* NetworkReachability.swift */,
 				167BB053E9CBEB02E50924BF /* SynoApiModels.swift */,
 				7B5D42BEE24F825091A1E272 /* SynologyClient.swift */,
+				A264B115C3CACE8022B17217 /* SynologySessionDelegate.swift */,
 				7E7CFE02E556D917CDAC1FEC /* AppConfig.swift */,
 			);
 			name = SynologyMountCore;
@@ -197,6 +200,7 @@
 				0AB90B60A2628BD21C22B88B /* NetworkReachability.swift in Sources */,
 				85F72BEC631D67CB69D4C6B7 /* SynoApiModels.swift in Sources */,
 				475ABD962D035790CA19EA58 /* SynologyClient.swift in Sources */,
+				6C7FA6ED01CDFF0662CC1AD9 /* SynologySessionDelegate.swift in Sources */,
 				8AE11F849E7E376747D1EE47 /* KeychainHelper.swift in Sources */,
 				51B4A028A5C8A85430699904 /* ProfileManager.swift in Sources */,
 				ECF165A2B4DF7F5D8E555453 /* MountAppStore.swift in Sources */,
