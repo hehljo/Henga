@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 
+@MainActor
 @Observable
 public final class MountAppStore: @unchecked Sendable {
     public var profiles: [ServerProfile] = []
@@ -45,17 +46,11 @@ public final class MountAppStore: @unchecked Sendable {
     }
     
     public func syncMounts() async {
-        let shouldProceed = await MainActor.run { () -> Bool in
-            if self.isSyncing { return false }
-            self.isSyncing = true
-            return true
-        }
-        guard shouldProceed else { return }
+        if self.isSyncing { return }
+        self.isSyncing = true
         
         defer {
-            Task { @MainActor in
-                self.isSyncing = false
-            }
+            self.isSyncing = false
         }
         
         print("[SynologyMount] 🔄 Starte syncMounts für \(profiles.count) Profile...")
@@ -64,13 +59,11 @@ public final class MountAppStore: @unchecked Sendable {
         let online = reachability.isConnected
         let now = Date()
         
-        await MainActor.run {
-            for st in all {
-                self.statuses[st.share.id] = st
-            }
-            self.lastSyncTime = now
-            self.isNetworkOnline = online
+        for st in all {
+            self.statuses[st.share.id] = st
         }
+        self.lastSyncTime = now
+        self.isNetworkOnline = online
     }
     
     public func mountShare(_ share: ShareMount, from profile: ServerProfile) async throws {
@@ -78,17 +71,13 @@ public final class MountAppStore: @unchecked Sendable {
         do {
             try await mountManager.mount(share: share, profile: profile)
             if let st = await mountManager.getStatus(for: share.id) {
-                await MainActor.run {
-                    self.statuses[share.id] = st
-                }
+                self.statuses[share.id] = st
             }
             print("[SynologyMount] ✅ Mount erfolgreich für '\(share.name)'!")
         } catch {
             print("[SynologyMount] ❌ Mount fehlgeschlagen für '\(share.name)': \(error.localizedDescription)")
             if let st = await mountManager.getStatus(for: share.id) {
-                await MainActor.run {
-                    self.statuses[share.id] = st
-                }
+                self.statuses[share.id] = st
             }
             throw error
         }
@@ -98,9 +87,7 @@ public final class MountAppStore: @unchecked Sendable {
         print("[SynologyMount] ⏹ Unmount-Anforderung für '\(share.name)'...")
         try await mountManager.unmount(share: share, profileId: profile.id)
         if let st = await mountManager.getStatus(for: share.id) {
-            await MainActor.run {
-                self.statuses[share.id] = st
-            }
+            self.statuses[share.id] = st
         }
     }
 }

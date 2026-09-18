@@ -6,6 +6,13 @@ public enum MountState: String, Codable, Sendable {
     case mounted
     case error
     case unmounting
+    case unknown
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try? container.decode(String.self)
+        self = MountState(rawValue: raw ?? "") ?? .unknown
+    }
     
     public var isMounted: Bool {
         self == .mounted

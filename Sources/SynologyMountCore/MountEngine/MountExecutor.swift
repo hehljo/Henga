@@ -31,7 +31,7 @@ private typealias NetFSMountFunc = @convention(c) (
     UnsafeMutablePointer<Unmanaged<CFArray>?>?
 ) -> Int32
 
-private func invokeNetFSMount(url: CFURL, user: CFString, pass: CFString, mountpoints: inout Unmanaged<CFArray>?) -> Int32? {
+private func invokeNetFSMount(url: CFURL, mountPath: String?, user: CFString, pass: CFString, mountpoints: inout Unmanaged<CFArray>?) -> Int32? {
     guard let handle = dlopen("/System/Library/Frameworks/NetFS.framework/NetFS", RTLD_LAZY) else {
         return nil
     }
@@ -46,8 +46,10 @@ private func invokeNetFSMount(url: CFURL, user: CFString, pass: CFString, mountp
     let mountOptions = NSMutableDictionary()
     mountOptions.setValue(kCFBooleanTrue, forKey: "UIOptionSuppress")
     
+    let cfMountPath: CFURL? = mountPath != nil ? (URL(fileURLWithPath: mountPath!) as CFURL) : nil
+    
     let mountFunc = unsafeBitCast(sym, to: NetFSMountFunc.self)
-    return mountFunc(url, nil, user, pass, openOptions as CFMutableDictionary, mountOptions as CFMutableDictionary, &mountpoints)
+    return mountFunc(url, cfMountPath, user, pass, openOptions as CFMutableDictionary, mountOptions as CFMutableDictionary, &mountpoints)
 }
 #endif
 
@@ -108,39 +110,14 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
         return results
     }
     
-    /// Mountet via Apple NetFS API (dynamisch) oder Fallback auf /sbin/mount_smbfs
+    /// Mountet via /sbin/mount_smbfs auf den expliziten Mountpoint
+    /// Verhindert unkontrollierte Desktop-/Systemübersicht-Icons von NetFS
     public func mountVolume(url: URL, mountPoint: String, username: String, password: String?) async throws {
         guard let host = url.host else {
             throw SynoClientError.invalidHost
         }
         let share = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         
-        #if os(macOS)
-        let smbUrlString = "smb://\(host)/\(share)"
-        if let cfUrl = URL(string: smbUrlString) as CFURL? {
-            print("[SynologyMount] 🍏 Führe Apple NetFS Mount aus: smb://\(username)@\(host)/\(share)...")
-            let cfUser = username as CFString
-            let cfPass = (password ?? "") as CFString
-            var mountpoints: Unmanaged<CFArray>?
-            
-            if let status = invokeNetFSMount(url: cfUrl, user: cfUser, pass: cfPass, mountpoints: &mountpoints) {
-                if status == 0 {
-                    if let arrayRef = mountpoints?.takeRetainedValue() as? [String], let firstPath = arrayRef.first {
-                        print("[SynologyMount] 🎉 NetFSMount erfolgreich! Gemountet unter: \(firstPath)")
-                    } else {
-                        print("[SynologyMount] 🎉 NetFSMount erfolgreich!")
-                    }
-                    return
-                } else {
-                    print("[SynologyMount] ⚠️ NetFSMount lieferte Status \(status). Verwende Fallback auf /sbin/mount_smbfs...")
-                }
-            } else {
-                print("[SynologyMount] ℹ️ NetFS.framework nicht dynamisch ladbar, verwende /sbin/mount_smbfs...")
-            }
-        }
-        #endif
-        
-        // Fallback: /sbin/mount_smbfs
         let fm = FileManager.default
         if !fm.fileExists(atPath: mountPoint) {
             try fm.createDirectory(atPath: mountPoint, withIntermediateDirectories: true)
@@ -154,7 +131,8 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
         }
         
         let smbSource = "//\(userPart)@\(host)/\(share)"
-        print("[SynologyMount] ⚙️ Fallback /sbin/mount_smbfs: //\(username):***@\(host)/\(share) -> \(mountPoint)")
+        let safeLogSource = "//\(username):***@\(host)/\(share)"
+        print("[SynologyMount] ⚙️ Führe kontrollierten Mount aus: \(safeLogSource) -> \(mountPoint)")
         
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/sbin/mount_smbfs")
@@ -180,7 +158,7 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
             try? fm.removeItem(atPath: mountPoint)
             throw SynoClientError.networkError("Mount fehlgeschlagen (Code \(process.terminationStatus)): \(trimmedMsg)")
         } else {
-            print("[SynologyMount] 🎉 mount_smbfs erfolgreich beendet für \(mountPoint)")
+            print("[SynologyMount] 🎉 Mount erfolgreich auf Zielpfad \(mountPoint)!")
         }
     }
     
