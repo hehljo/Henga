@@ -11,7 +11,6 @@ def main():
     shared_data = os.path.join(proj_dir, "xcshareddata", "xcschemes")
     os.makedirs(shared_data, exist_ok=True)
     
-    # Quell-Dateien sammeln
     core_files = []
     mac_files = []
     
@@ -199,7 +198,7 @@ def main():
     lines.append("\t\t\tisa = PBXProject;")
     lines.append("\t\t\tattributes = {")
     lines.append("\t\t\t\tBuildIndependentTargetsInParallel = 1;")
-    lines.append("\t\t\t\tLastUpgradeCheck = 1500;")
+    lines.append("\t\t\t\tLastUpgradeCheck = 1600;")
     lines.append("\t\t\t\tTargetAttributes = {")
     lines.append(f"\t\t\t\t\t{TARGET_ID} = {{")
     lines.append("\t\t\t\t\t\tCreatedOnToolsVersion = 15.0;")
@@ -310,12 +309,11 @@ def main():
     lines.append("\t\t\tisa = XCBuildConfiguration;")
     lines.append("\t\t\tbuildSettings = {")
     lines.append("\t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;")
-    lines.append("\t\t\t\tCODE_SIGN_ENTITLEMENTS = \"Sources/SynologyMountMac/App.entitlements\";")
     lines.append("\t\t\t\tCODE_SIGN_IDENTITY = \"-\";")
     lines.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
     lines.append("\t\t\t\tCOMBINE_HIDPI_IMAGES = YES;")
     lines.append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;")
-    lines.append("\t\t\t\tENABLE_HARDENED_RUNTIME = YES;")
+    lines.append("\t\t\t\tENABLE_HARDENED_RUNTIME = NO;")
     lines.append("\t\t\t\tGENERATE_INFOPLIST_FILE = NO;")
     lines.append("\t\t\t\tINFOPLIST_FILE = \"Sources/SynologyMountMac/Info.plist\";")
     lines.append("\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (")
@@ -335,12 +333,11 @@ def main():
     lines.append("\t\t\tisa = XCBuildConfiguration;")
     lines.append("\t\t\tbuildSettings = {")
     lines.append("\t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;")
-    lines.append("\t\t\t\tCODE_SIGN_ENTITLEMENTS = \"Sources/SynologyMountMac/App.entitlements\";")
     lines.append("\t\t\t\tCODE_SIGN_IDENTITY = \"-\";")
     lines.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
     lines.append("\t\t\t\tCOMBINE_HIDPI_IMAGES = YES;")
     lines.append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;")
-    lines.append("\t\t\t\tENABLE_HARDENED_RUNTIME = YES;")
+    lines.append("\t\t\t\tENABLE_HARDENED_RUNTIME = NO;")
     lines.append("\t\t\t\tGENERATE_INFOPLIST_FILE = NO;")
     lines.append("\t\t\t\tINFOPLIST_FILE = \"Sources/SynologyMountMac/Info.plist\";")
     lines.append("\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (")
@@ -394,7 +391,7 @@ def main():
     # Create Shared Scheme
     scheme_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1500"
+   LastUpgradeVersion = "1600"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
