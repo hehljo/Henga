@@ -41,6 +41,7 @@ struct MenuBarContentView: View {
     
     @ViewBuilder
     private var sharesSection: some View {
+        // Filtere alle Freigaben aus aktiven Profilen
         let allShares = store.profiles.flatMap { p in
             p.shares.map { (profile: p, share: $0) }
         }
@@ -74,6 +75,7 @@ struct MenuBarContentView: View {
                     Spacer()
                     
                     Button {
+                        store.reloadProfiles()
                         Task { await store.syncMounts() }
                     } label: {
                         Image(systemName: "arrow.clockwise")

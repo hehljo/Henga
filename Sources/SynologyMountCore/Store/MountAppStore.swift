@@ -25,10 +25,13 @@ public final class MountAppStore: @unchecked Sendable {
     }
     
     public func reloadProfiles() {
-        self.profiles = profileManager.getProfiles()
+        let loaded = profileManager.getProfiles()
+        print("[SynologyMount] 📂 Lade Profile neu: \(loaded.count) Profil(e), Shares: \(loaded.flatMap { $0.shares }.map { $0.name })")
+        self.profiles = loaded
     }
     
     public func saveProfile(_ profile: ServerProfile) {
+        print("[SynologyMount] 💾 Speichere Profil '\(profile.name)' mit \(profile.shares.count) Freigaben...")
         profileManager.addOrUpdateProfile(profile)
         reloadProfiles()
         Task {
@@ -55,6 +58,7 @@ public final class MountAppStore: @unchecked Sendable {
             }
         }
         
+        print("[SynologyMount] 🔄 Starte syncMounts für \(profiles.count) Profile...")
         await mountManager.runAutoMountCycle(profiles: profiles)
         let all = await mountManager.getAllStatuses()
         let online = reachability.isConnected
@@ -70,15 +74,28 @@ public final class MountAppStore: @unchecked Sendable {
     }
     
     public func mountShare(_ share: ShareMount, from profile: ServerProfile) async throws {
-        try await mountManager.mount(share: share, profile: profile)
-        if let st = await mountManager.getStatus(for: share.id) {
-            await MainActor.run {
-                self.statuses[share.id] = st
+        print("[SynologyMount] 🚀 Mount-Anforderung für '\(share.name)' (\(share.remotePath))...")
+        do {
+            try await mountManager.mount(share: share, profile: profile)
+            if let st = await mountManager.getStatus(for: share.id) {
+                await MainActor.run {
+                    self.statuses[share.id] = st
+                }
             }
+            print("[SynologyMount] ✅ Mount erfolgreich für '\(share.name)'!")
+        } catch {
+            print("[SynologyMount] ❌ Mount fehlgeschlagen für '\(share.name)': \(error.localizedDescription)")
+            if let st = await mountManager.getStatus(for: share.id) {
+                await MainActor.run {
+                    self.statuses[share.id] = st
+                }
+            }
+            throw error
         }
     }
     
     public func unmountShare(_ share: ShareMount, from profile: ServerProfile) async throws {
+        print("[SynologyMount] ⏹ Unmount-Anforderung für '\(share.name)'...")
         try await mountManager.unmount(share: share, profileId: profile.id)
         if let st = await mountManager.getStatus(for: share.id) {
             await MainActor.run {
