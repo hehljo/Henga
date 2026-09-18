@@ -3,7 +3,7 @@ import Foundation
 public struct ActiveMountInfo: Identifiable, Equatable, Sendable {
     public var id: String { mountPoint }
     public let serverURL: String       // z.B. "//user@192.168.1.6/Daten"
-    public let mountPoint: String      // z.B. "/Volumes/Daten"
+    public let mountPoint: String      // z.B. "/Users/.../Mounts/Daten"
     public let fileSystemType: String  // z.B. "smbfs"
     
     public init(serverURL: String, mountPoint: String, fileSystemType: String) {
@@ -83,7 +83,9 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
         return results
     }
     
-    /// Mountet isoliert via `/sbin/mount_smbfs` direkt in den isolierten User-Cache
+    /// Mountet mit -o nobrowse (MNT_NOBROWSE Flag im Kernel VFS)
+    /// Dadurch blendet der macOS Finder das Laufwerk in 'Computer' ('MacBook Air von Johannes') VOLLSTÄNDIG aus!
+    /// Zugriff erfolgt 100% sauber und exklusiv über den Finder-Hub Ordner (~/DiskStation)!
     public func mountVolume(url: URL, mountPoint: String, username: String, password: String?) async throws {
         guard let host = url.host else {
             throw SynoClientError.invalidHost
@@ -104,11 +106,12 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
         
         let smbSource = "//\(userPart)@\(host)/\(share)"
         let safeLogSource = "//\(username):***@\(host)/\(share)"
-        print("[SynologyMount] ⚙️ Führe isolierten Mount aus: \(safeLogSource) -> \(mountPoint)")
+        print("[SynologyMount] ⚙️ Führe unsichtbaren Mount aus (-o nobrowse): \(safeLogSource) -> \(mountPoint)")
         
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/sbin/mount_smbfs")
-        process.arguments = [smbSource, mountPoint]
+        // -o nobrowse versteckt das Volume komplett vor Apples Disk Arbitration und Finder-Computer-Ansicht!
+        process.arguments = ["-o", "nobrowse", smbSource, mountPoint]
         
         let errPipe = Pipe()
         process.standardError = errPipe
@@ -130,7 +133,7 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
             try? fm.removeItem(atPath: mountPoint)
             throw SynoClientError.networkError("Mount fehlgeschlagen (Code \(process.terminationStatus)): \(trimmedMsg)")
         } else {
-            print("[SynologyMount] 🎉 Isolierter Mount erfolgreich: \(mountPoint)")
+            print("[SynologyMount] 🎉 Unsichtbarer Mount (-o nobrowse) erfolgreich: \(mountPoint) (Systemübersicht ist 100% frei!)")
         }
     }
     
