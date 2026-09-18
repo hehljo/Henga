@@ -5,7 +5,6 @@
 	};
 	objectVersion = 56;
 	objects = {
-
 /* Begin PBXBuildFile section */
 		FF5496F038F01B4A7396B9EA /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7CFE02E556D917CDAC1FEC /* AppConfig.swift */; };
 		8C9F73A3CF97A8AEC960587D /* ServerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 615189D627532CD5A2F0DB1A /* ServerProfile.swift */; };
@@ -25,16 +24,11 @@
 		06BDF3414AF06B6E1BB6C7EF /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E832A677B59B3583669CDA9 /* App.swift */; };
 		FC728625ED01782CF32D68BF /* MenuBarContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36A739761CC0FFE75A6E709 /* MenuBarContentView.swift */; };
 		EA142C71B50C90DE04AC3C93 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71DCB50C040BAFD9449B8D2 /* SettingsView.swift */; };
-		FC500D640F0D8A006949D2AD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CF42652244BF43C0A97EF809 /* Assets.xcassets */; };
-		45D91A9C410DE262EB3DFC5D /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 367D616F01D2CF656CF3A4CA /* Localizable.xcstrings */; };
+		0DD2AAF55A8E64A252953C04 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A18DA67ECD20B2D481F60392 /* Assets.xcassets */; };
+		1ACCD68EF57805D42D56328C /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = B9E526D3D0E79CD731F204D2 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
-		3AA759B3F9D412F878A96B4A /* SynologyMount.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SynologyMount.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B6520B9CFDB1656521874B06 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = "App.entitlements"; path = "Sources/SynologyMountMac/App.entitlements"; sourceTree = SOURCE_ROOT; };
-		C16E3D7203B642C1024EB02B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info.plist"; path = "Sources/SynologyMountMac/Info.plist"; sourceTree = SOURCE_ROOT; };
-		CF42652244BF43C0A97EF809 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "Assets.xcassets"; path = "Sources/SynologyMountMac/Assets.xcassets"; sourceTree = SOURCE_ROOT; };
-		367D616F01D2CF656CF3A4CA /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = "Localizable.xcstrings"; path = "Sources/SynologyMountMac/Localizable.xcstrings"; sourceTree = SOURCE_ROOT; };
+		E2FA921BD2FAF219183B9632 /* SynologyMount.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SynologyMount.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E7CFE02E556D917CDAC1FEC /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "AppConfig.swift"; path = "Sources/SynologyMountCore/Config/AppConfig.swift"; sourceTree = SOURCE_ROOT; };
 		615189D627532CD5A2F0DB1A /* ServerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ServerProfile.swift"; path = "Sources/SynologyMountCore/Models/ServerProfile.swift"; sourceTree = SOURCE_ROOT; };
 		E98F0D5F57F5E4D7F7B40A06 /* ShareMount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "ShareMount.swift"; path = "Sources/SynologyMountCore/Models/ShareMount.swift"; sourceTree = SOURCE_ROOT; };
@@ -53,10 +47,13 @@
 		3E832A677B59B3583669CDA9 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "App.swift"; path = "Sources/SynologyMountMac/App.swift"; sourceTree = SOURCE_ROOT; };
 		C36A739761CC0FFE75A6E709 /* MenuBarContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "MenuBarContentView.swift"; path = "Sources/SynologyMountMac/MenuBarContentView.swift"; sourceTree = SOURCE_ROOT; };
 		A71DCB50C040BAFD9449B8D2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SettingsView.swift"; path = "Sources/SynologyMountMac/SettingsView.swift"; sourceTree = SOURCE_ROOT; };
+		A18DA67ECD20B2D481F60392 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "Assets.xcassets"; path = "Sources/SynologyMountMac/Assets.xcassets"; sourceTree = SOURCE_ROOT; };
+		B9E526D3D0E79CD731F204D2 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "Localizable.xcstrings"; path = "Sources/SynologyMountMac/Localizable.xcstrings"; sourceTree = SOURCE_ROOT; };
+		D5FFE91C160DEB805B4183BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info.plist"; path = "Sources/SynologyMountMac/Info.plist"; sourceTree = SOURCE_ROOT; };
+		FD62ADCCF79F387D5A8071F5 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "App.entitlements"; path = "Sources/SynologyMountMac/App.entitlements"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
-
 /* Begin PBXFrameworksBuildPhase section */
-		3C6E5C9F37C1BE3F17710F7B /* Frameworks */ = {
+		29B2D46AA747A59804D46E1F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -64,71 +61,69 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
-
 /* Begin PBXGroup section */
-		2117BCC1D98307744A70AE83 = {
+		5928955287B8089ED2177128 = {
 			isa = PBXGroup;
 			children = (
-				1DC8F5BFCBEDF3193AD03A3C /* SynologyMountCore */,
-				31512A4F672DD032AE90380F /* SynologyMountMac */,
-				10E1259B9B8DFCF8F3AE3033 /* Products */,
+				56FF437C3595AA04784D1FDF /* SynologyMountCore */,
+				68A99E44DD3082AF8DED86BD /* SynologyMountMac */,
+				BF7A2D27A78D590BDEF15AF2 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		1DC8F5BFCBEDF3193AD03A3C /* SynologyMountCore */ = {
+		56FF437C3595AA04784D1FDF /* SynologyMountCore */ = {
 			isa = PBXGroup;
 			children = (
+				7E7CFE02E556D917CDAC1FEC /* AppConfig.swift */,
 				615189D627532CD5A2F0DB1A /* ServerProfile.swift */,
 				E98F0D5F57F5E4D7F7B40A06 /* ShareMount.swift */,
 				853989808C39DD0769E4DA0E /* SynoSharedFolder.swift */,
 				22364A59C98DF8BC89D6CCF3 /* MountExecutor.swift */,
 				2F3F336FDDF9B5E77C466F10 /* MountManager.swift */,
 				96BADBD02E9129F3F2C78E49 /* MountPointSanitizer.swift */,
-				47938F68069AA47ACE6C88A1 /* MountAppStore.swift */,
-				3FE125BA265122D69FB5DC68 /* KeychainHelper.swift */,
-				CD8D52B9C3CA3051CBA33475 /* ProfileManager.swift */,
 				973052DA421B0CFCA70F74B2 /* NetworkCompat.swift */,
 				4E7E70B3AA94B43841F793C3 /* NetworkReachability.swift */,
 				167BB053E9CBEB02E50924BF /* SynoApiModels.swift */,
 				7B5D42BEE24F825091A1E272 /* SynologyClient.swift */,
 				A264B115C3CACE8022B17217 /* SynologySessionDelegate.swift */,
-				7E7CFE02E556D917CDAC1FEC /* AppConfig.swift */,
+				3FE125BA265122D69FB5DC68 /* KeychainHelper.swift */,
+				CD8D52B9C3CA3051CBA33475 /* ProfileManager.swift */,
+				47938F68069AA47ACE6C88A1 /* MountAppStore.swift */,
 			);
 			name = SynologyMountCore;
 			sourceTree = "<group>";
 		};
-		31512A4F672DD032AE90380F /* SynologyMountMac */ = {
+		68A99E44DD3082AF8DED86BD /* SynologyMountMac */ = {
 			isa = PBXGroup;
 			children = (
 				3E832A677B59B3583669CDA9 /* App.swift */,
 				C36A739761CC0FFE75A6E709 /* MenuBarContentView.swift */,
 				A71DCB50C040BAFD9449B8D2 /* SettingsView.swift */,
-				B6520B9CFDB1656521874B06 /* App.entitlements */,
-				C16E3D7203B642C1024EB02B /* Info.plist */,
-				CF42652244BF43C0A97EF809 /* Assets.xcassets */,
-				367D616F01D2CF656CF3A4CA /* Localizable.xcstrings */,
+				A18DA67ECD20B2D481F60392 /* Assets.xcassets */,
+				B9E526D3D0E79CD731F204D2 /* Localizable.xcstrings */,
+				D5FFE91C160DEB805B4183BD /* Info.plist */,
+				FD62ADCCF79F387D5A8071F5 /* App.entitlements */,
 			);
 			name = SynologyMountMac;
 			sourceTree = "<group>";
 		};
-		10E1259B9B8DFCF8F3AE3033 /* Products */ = {
+		BF7A2D27A78D590BDEF15AF2 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3AA759B3F9D412F878A96B4A /* SynologyMount.app */,
+				E2FA921BD2FAF219183B9632 /* SynologyMount.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
-
 /* Begin PBXNativeTarget section */
-		84EFEBA83B18094B67EFBAC5 /* SynologyMount */ = {
+		92385BE564346F800061BF0C /* SynologyMount */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C2ADFA106A351431E0D41C74 /* Build configuration list for PBXNativeTarget "SynologyMount" */;
+			buildConfigurationList = F707ED8CFBC457F7F618ECA6 /* Build configuration list for PBXNativeTarget "SynologyMount" */;
 			buildPhases = (
-				8F458A67C9C1C91C1A642B4B /* Sources */,
-				3C6E5C9F37C1BE3F17710F7B /* Frameworks */,
-				A2964FC386504D4D9CEA1ED3 /* Resources */,
+				E7209FB05162B7572F88D05E /* Sources */,
+				29B2D46AA747A59804D46E1F /* Frameworks */,
+				66F8606E9F0A136E2228EBCB /* Resources */,
 			);
 			buildRules = (
 			);
@@ -136,56 +131,47 @@
 			);
 			name = SynologyMount;
 			productName = SynologyMount;
-			productReference = 3AA759B3F9D412F878A96B4A /* SynologyMount.app */;
+			productReference = E2FA921BD2FAF219183B9632 /* SynologyMount.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
-
 /* Begin PBXProject section */
-		63134F1662C2C005D568DAD1 /* Project object */ = {
+		12C089DB0F5394E977C54D95 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 1500;
-				TargetAttributes = {
-					84EFEBA83B18094B67EFBAC5 = {
-						CreatedOnToolsVersion = 15.0;
-					};
-				};
+				LastUpgradeCheck = 1600;
 			};
-			buildConfigurationList = 7E18A84E7652C5293A6B3987 /* Build configuration list for PBXProject "SynologyMount" */;
+			buildConfigurationList = CB7CBE0C3B42E7D081FECC31 /* Build configuration list for PBXProject "SynologyMount" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = de;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				de,
-				en,
 				Base,
 			);
-			mainGroup = 2117BCC1D98307744A70AE83;
-			productRefGroup = 10E1259B9B8DFCF8F3AE3033 /* Products */;
+			mainGroup = 5928955287B8089ED2177128;
+			productRefGroup = BF7A2D27A78D590BDEF15AF2 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				84EFEBA83B18094B67EFBAC5 /* SynologyMount */,
+				92385BE564346F800061BF0C /* SynologyMount */,
 			);
 		};
 /* End PBXProject section */
-
 /* Begin PBXResourcesBuildPhase section */
-		A2964FC386504D4D9CEA1ED3 /* Resources */ = {
+		66F8606E9F0A136E2228EBCB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FC500D640F0D8A006949D2AD /* Assets.xcassets in Resources */,
-				45D91A9C410DE262EB3DFC5D /* Localizable.xcstrings in Resources */,
+				0DD2AAF55A8E64A252953C04 /* Assets.xcassets in Resources */,
+				1ACCD68EF57805D42D56328C /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
-		8F458A67C9C1C91C1A642B4B /* Sources */ = {
+		E7209FB05162B7572F88D05E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -211,40 +197,31 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
 /* Begin XCBuildConfiguration section */
-		DA531A8E97DCCF5E75E08D1D /* Debug */ = {
+		E95DB3DDB35DB25437EE0C0B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_TESTABILITY = YES;
-				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
-		EC13A9A22B8EBCD4B831580D /* Release */ = {
+		9584AF23772D44B73CAE1DEA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = NO;
@@ -259,7 +236,7 @@
 			};
 			name = Release;
 		};
-		950B69D1BE22E4EF2DDA3F58 /* Debug */ = {
+		5C1FCF821166A8E947DC58DE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -283,7 +260,7 @@
 			};
 			name = Debug;
 		};
-		6D6334A1BD3B6981A1B1F1EF /* Release */ = {
+		D8A34C63742B602B66E1CD36 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -308,28 +285,26 @@
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
-
 /* Begin XCConfigurationList section */
-		7E18A84E7652C5293A6B3987 /* Build configuration list for PBXProject "SynologyMount" */ = {
+		CB7CBE0C3B42E7D081FECC31 /* Build configuration list for PBXProject "SynologyMount" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				DA531A8E97DCCF5E75E08D1D /* Debug */,
-				EC13A9A22B8EBCD4B831580D /* Release */,
+				E95DB3DDB35DB25437EE0C0B /* Debug */,
+				9584AF23772D44B73CAE1DEA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C2ADFA106A351431E0D41C74 /* Build configuration list for PBXNativeTarget "SynologyMount" */ = {
+		F707ED8CFBC457F7F618ECA6 /* Build configuration list for PBXNativeTarget "SynologyMount" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				950B69D1BE22E4EF2DDA3F58 /* Debug */,
-				6D6334A1BD3B6981A1B1F1EF /* Release */,
+				5C1FCF821166A8E947DC58DE /* Debug */,
+				D8A34C63742B602B66E1CD36 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
-	rootObject = 63134F1662C2C005D568DAD1 /* Project object */;
+	rootObject = 12C089DB0F5394E977C54D95 /* Project object */;
 }

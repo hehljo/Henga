@@ -11,66 +11,61 @@ def main():
     shared_data = os.path.join(proj_dir, "xcshareddata", "xcschemes")
     os.makedirs(shared_data, exist_ok=True)
     
+    # Collect source files
     core_files = []
     mac_files = []
     
-    for r, _, fnames in os.walk(os.path.join(root_dir, "Sources/SynologyMountCore")):
-        for f in sorted(fnames):
+    for r, _, files in os.walk(os.path.join(root_dir, "Sources", "SynologyMountCore")):
+        for f in files:
             if f.endswith(".swift"):
-                rel = os.path.relpath(os.path.join(r, f), root_dir)
-                core_files.append(rel)
+                core_files.append(os.path.relpath(os.path.join(r, f), root_dir))
                 
-    for r, _, fnames in os.walk(os.path.join(root_dir, "Sources/SynologyMountMac")):
-        for f in sorted(fnames):
+    for r, _, files in os.walk(os.path.join(root_dir, "Sources", "SynologyMountMac")):
+        for f in files:
             if f.endswith(".swift"):
-                rel = os.path.relpath(os.path.join(r, f), root_dir)
-                mac_files.append(rel)
-
-    entitlements_rel = "Sources/SynologyMountMac/App.entitlements"
-    info_plist_rel = "Sources/SynologyMountMac/Info.plist"
-    assets_rel = "Sources/SynologyMountMac/Assets.xcassets"
-    strings_rel = "Sources/SynologyMountMac/Localizable.xcstrings"
-    
+                mac_files.append(os.path.relpath(os.path.join(r, f), root_dir))
+                
     all_swift_files = sorted(core_files + mac_files)
     
-    # PBX IDs
-    PROJ_ID = make_id("PROJECT_ROOT_SYNO_MOUNT")
-    TARGET_ID = make_id("TARGET_MACOS_APP_SYNO_MOUNT")
-    SOURCES_PHASE_ID = make_id("PHASE_SOURCES_SYNO_MOUNT")
-    FRAMEWORKS_PHASE_ID = make_id("PHASE_FRAMEWORKS_SYNO_MOUNT")
-    RESOURCES_PHASE_ID = make_id("PHASE_RESOURCES_SYNO_MOUNT")
-    APP_PRODUCT_ID = make_id("PRODUCT_APP_SYNO_MOUNT")
-    
-    MAIN_GROUP_ID = make_id("GROUP_MAIN_SYNO_MOUNT")
-    SOURCES_GROUP_ID = make_id("GROUP_SOURCES_SYNO_MOUNT")
-    CORE_GROUP_ID = make_id("GROUP_CORE_SYNO_MOUNT")
-    MAC_GROUP_ID = make_id("GROUP_MAC_SYNO_MOUNT")
-    PRODUCTS_GROUP_ID = make_id("GROUP_PRODUCTS_SYNO_MOUNT")
-    
-    PROJ_CONFIG_LIST_ID = make_id("CONFIG_LIST_PROJECT_SYNO_MOUNT")
-    PROJ_DEBUG_CONFIG_ID = make_id("CONFIG_PROJECT_DEBUG_SYNO_MOUNT")
-    PROJ_RELEASE_CONFIG_ID = make_id("CONFIG_PROJECT_RELEASE_SYNO_MOUNT")
-    
-    TARGET_CONFIG_LIST_ID = make_id("CONFIG_LIST_TARGET_SYNO_MOUNT")
-    TARGET_DEBUG_CONFIG_ID = make_id("CONFIG_TARGET_DEBUG_SYNO_MOUNT")
-    TARGET_RELEASE_CONFIG_ID = make_id("CONFIG_TARGET_RELEASE_SYNO_MOUNT")
-    
+    # File references
     file_refs = {}
-    build_files = {}
-    
     for fpath in all_swift_files:
         fid = make_id(f"file_ref_{fpath}")
         bid = make_id(f"build_file_{fpath}")
         file_refs[fpath] = (fid, bid)
-        build_files[bid] = (fid, os.path.basename(fpath))
         
-    ent_fid = make_id("file_ref_entitlements_sm")
-    plist_fid = make_id("file_ref_infoplist_sm")
-    assets_fid = make_id("file_ref_assets_sm")
-    assets_bid = make_id("build_file_assets_sm")
-    strings_fid = make_id("file_ref_strings_sm")
-    strings_bid = make_id("build_file_strings_sm")
+    res_files = [
+        "Sources/SynologyMountMac/Assets.xcassets",
+        "Sources/SynologyMountMac/Localizable.xcstrings",
+        "Sources/SynologyMountMac/Info.plist",
+        "Sources/SynologyMountMac/App.entitlements"
+    ]
+    res_refs = {}
+    for rpath in res_files:
+        fid = make_id(f"file_ref_{rpath}")
+        bid = make_id(f"build_file_{rpath}")
+        res_refs[rpath] = (fid, bid)
+
+    TARGET_ID = make_id("target_SynologyMount")
+    PROJECT_ID = make_id("project_SynologyMount")
+    MAIN_GROUP_ID = make_id("main_group")
+    CORE_GROUP_ID = make_id("core_group")
+    MAC_GROUP_ID = make_id("mac_group")
+    PRODUCTS_GROUP_ID = make_id("products_group")
+    PRODUCT_REF_ID = make_id("product_app_ref")
     
+    SOURCES_PHASE_ID = make_id("sources_phase")
+    RESOURCES_PHASE_ID = make_id("resources_phase")
+    FRAMEWORKS_PHASE_ID = make_id("frameworks_phase")
+    
+    PROJ_DEBUG_CONFIG_ID = make_id("proj_debug_config")
+    PROJ_RELEASE_CONFIG_ID = make_id("proj_release_config")
+    TARGET_DEBUG_CONFIG_ID = make_id("target_debug_config")
+    TARGET_RELEASE_CONFIG_ID = make_id("target_release_config")
+    
+    PROJ_CONFIG_LIST_ID = make_id("proj_config_list")
+    TARGET_CONFIG_LIST_ID = make_id("target_config_list")
+
     lines = []
     lines.append("// !$*UTF8*$!")
     lines.append("{")
@@ -79,7 +74,6 @@ def main():
     lines.append("\t};")
     lines.append("\tobjectVersion = 56;")
     lines.append("\tobjects = {")
-    lines.append("")
     
     # PBXBuildFile
     lines.append("/* Begin PBXBuildFile section */")
@@ -87,24 +81,25 @@ def main():
         fid, bid = file_refs[fpath]
         fname = os.path.basename(fpath)
         lines.append(f"\t\t{bid} /* {fname} in Sources */ = {{isa = PBXBuildFile; fileRef = {fid} /* {fname} */; }};")
-    lines.append(f"\t\t{assets_bid} /* Assets.xcassets in Resources */ = {{isa = PBXBuildFile; fileRef = {assets_fid} /* Assets.xcassets */; }};")
-    lines.append(f"\t\t{strings_bid} /* Localizable.xcstrings in Resources */ = {{isa = PBXBuildFile; fileRef = {strings_fid} /* Localizable.xcstrings */; }};")
+    for rpath in ["Sources/SynologyMountMac/Assets.xcassets", "Sources/SynologyMountMac/Localizable.xcstrings"]:
+        fid, bid = res_refs[rpath]
+        fname = os.path.basename(rpath)
+        lines.append(f"\t\t{bid} /* {fname} in Resources */ = {{isa = PBXBuildFile; fileRef = {fid} /* {fname} */; }};")
     lines.append("/* End PBXBuildFile section */")
-    lines.append("")
     
     # PBXFileReference
     lines.append("/* Begin PBXFileReference section */")
-    lines.append(f"\t\t{APP_PRODUCT_ID} /* SynologyMount.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SynologyMount.app; sourceTree = BUILT_PRODUCTS_DIR; }};")
-    lines.append(f"\t\t{ent_fid} /* App.entitlements */ = {{isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = \"App.entitlements\"; path = \"{entitlements_rel}\"; sourceTree = SOURCE_ROOT; }};")
-    lines.append(f"\t\t{plist_fid} /* Info.plist */ = {{isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = \"Info.plist\"; path = \"{info_plist_rel}\"; sourceTree = SOURCE_ROOT; }};")
-    lines.append(f"\t\t{assets_fid} /* Assets.xcassets */ = {{isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = \"Assets.xcassets\"; path = \"{assets_rel}\"; sourceTree = SOURCE_ROOT; }};")
-    lines.append(f"\t\t{strings_fid} /* Localizable.xcstrings */ = {{isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = \"Localizable.xcstrings\"; path = \"{strings_rel}\"; sourceTree = SOURCE_ROOT; }};")
+    lines.append(f"\t\t{PRODUCT_REF_ID} /* SynologyMount.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SynologyMount.app; sourceTree = BUILT_PRODUCTS_DIR; }};")
     for fpath in all_swift_files:
         fid, _ = file_refs[fpath]
         fname = os.path.basename(fpath)
         lines.append(f"\t\t{fid} /* {fname} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = \"{fname}\"; path = \"{fpath}\"; sourceTree = SOURCE_ROOT; }};")
+    for rpath in res_files:
+        fid, _ = res_refs[rpath]
+        fname = os.path.basename(rpath)
+        ftype = "folder.assetcatalog" if rpath.endswith(".xcassets") else ("text.plist.strings" if rpath.endswith(".xcstrings") else "text.plist.xml")
+        lines.append(f"\t\t{fid} /* {fname} */ = {{isa = PBXFileReference; lastKnownFileType = {ftype}; name = \"{fname}\"; path = \"{rpath}\"; sourceTree = SOURCE_ROOT; }};")
     lines.append("/* End PBXFileReference section */")
-    lines.append("")
     
     # PBXFrameworksBuildPhase
     lines.append("/* Begin PBXFrameworksBuildPhase section */")
@@ -116,9 +111,8 @@ def main():
     lines.append("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
     lines.append("\t\t};")
     lines.append("/* End PBXFrameworksBuildPhase section */")
-    lines.append("")
     
-    # PBXGroup
+    # PBXGroup section
     lines.append("/* Begin PBXGroup section */")
     lines.append(f"\t\t{MAIN_GROUP_ID} = {{")
     lines.append("\t\t\tisa = PBXGroup;")
@@ -133,7 +127,7 @@ def main():
     lines.append(f"\t\t{CORE_GROUP_ID} /* SynologyMountCore */ = {{")
     lines.append("\t\t\tisa = PBXGroup;")
     lines.append("\t\t\tchildren = (")
-    for fpath in core_files:
+    for fpath in sorted(core_files):
         fid, _ = file_refs[fpath]
         fname = os.path.basename(fpath)
         lines.append(f"\t\t\t\t{fid} /* {fname} */,")
@@ -145,14 +139,14 @@ def main():
     lines.append(f"\t\t{MAC_GROUP_ID} /* SynologyMountMac */ = {{")
     lines.append("\t\t\tisa = PBXGroup;")
     lines.append("\t\t\tchildren = (")
-    for fpath in mac_files:
+    for fpath in sorted(mac_files):
         fid, _ = file_refs[fpath]
         fname = os.path.basename(fpath)
         lines.append(f"\t\t\t\t{fid} /* {fname} */,")
-    lines.append(f"\t\t\t\t{ent_fid} /* App.entitlements */,")
-    lines.append(f"\t\t\t\t{plist_fid} /* Info.plist */,")
-    lines.append(f"\t\t\t\t{assets_fid} /* Assets.xcassets */,")
-    lines.append(f"\t\t\t\t{strings_fid} /* Localizable.xcstrings */,")
+    for rpath in res_files:
+        fid, _ = res_refs[rpath]
+        fname = os.path.basename(rpath)
+        lines.append(f"\t\t\t\t{fid} /* {fname} */,")
     lines.append("\t\t\t);")
     lines.append("\t\t\tname = SynologyMountMac;")
     lines.append("\t\t\tsourceTree = \"<group>\";")
@@ -161,15 +155,14 @@ def main():
     lines.append(f"\t\t{PRODUCTS_GROUP_ID} /* Products */ = {{")
     lines.append("\t\t\tisa = PBXGroup;")
     lines.append("\t\t\tchildren = (")
-    lines.append(f"\t\t\t\t{APP_PRODUCT_ID} /* SynologyMount.app */,")
+    lines.append(f"\t\t\t\t{PRODUCT_REF_ID} /* SynologyMount.app */,")
     lines.append("\t\t\t);")
     lines.append("\t\t\tname = Products;")
     lines.append("\t\t\tsourceTree = \"<group>\";")
     lines.append("\t\t};")
     lines.append("/* End PBXGroup section */")
-    lines.append("")
     
-    # PBXNativeTarget
+    # PBXNativeTarget section
     lines.append("/* Begin PBXNativeTarget section */")
     lines.append(f"\t\t{TARGET_ID} /* SynologyMount */ = {{")
     lines.append("\t\t\tisa = PBXNativeTarget;")
@@ -185,24 +178,18 @@ def main():
     lines.append("\t\t\t);")
     lines.append("\t\t\tname = SynologyMount;")
     lines.append("\t\t\tproductName = SynologyMount;")
-    lines.append(f"\t\t\tproductReference = {APP_PRODUCT_ID} /* SynologyMount.app */;")
+    lines.append(f"\t\t\tproductReference = {PRODUCT_REF_ID} /* SynologyMount.app */;")
     lines.append("\t\t\tproductType = \"com.apple.product-type.application\";")
     lines.append("\t\t};")
     lines.append("/* End PBXNativeTarget section */")
-    lines.append("")
     
-    # PBXProject
+    # PBXProject section
     lines.append("/* Begin PBXProject section */")
-    lines.append(f"\t\t{PROJ_ID} /* Project object */ = {{")
+    lines.append(f"\t\t{PROJECT_ID} /* Project object */ = {{")
     lines.append("\t\t\tisa = PBXProject;")
     lines.append("\t\t\tattributes = {")
     lines.append("\t\t\t\tBuildIndependentTargetsInParallel = 1;")
-    lines.append("\t\t\t\tLastUpgradeCheck = 1500;")
-    lines.append("\t\t\t\tTargetAttributes = {")
-    lines.append(f"\t\t\t\t\t{TARGET_ID} = {{")
-    lines.append("\t\t\t\t\t\tCreatedOnToolsVersion = 15.0;")
-    lines.append("\t\t\t\t\t};")
-    lines.append("\t\t\t\t};")
+    lines.append("\t\t\t\tLastUpgradeCheck = 1600;")
     lines.append("\t\t\t};")
     lines.append(f"\t\t\tbuildConfigurationList = {PROJ_CONFIG_LIST_ID} /* Build configuration list for PBXProject \"SynologyMount\" */;")
     lines.append("\t\t\tcompatibilityVersion = \"Xcode 14.0\";")
@@ -210,7 +197,6 @@ def main():
     lines.append("\t\t\thasScannedForEncodings = 0;")
     lines.append("\t\t\tknownRegions = (")
     lines.append("\t\t\t\tde,")
-    lines.append("\t\t\t\ten,")
     lines.append("\t\t\t\tBase,")
     lines.append("\t\t\t);")
     lines.append(f"\t\t\tmainGroup = {MAIN_GROUP_ID};")
@@ -222,23 +208,23 @@ def main():
     lines.append("\t\t\t);")
     lines.append("\t\t};")
     lines.append("/* End PBXProject section */")
-    lines.append("")
     
-    # PBXResourcesBuildPhase
+    # PBXResourcesBuildPhase section
     lines.append("/* Begin PBXResourcesBuildPhase section */")
     lines.append(f"\t\t{RESOURCES_PHASE_ID} /* Resources */ = {{")
     lines.append("\t\t\tisa = PBXResourcesBuildPhase;")
     lines.append("\t\t\tbuildActionMask = 2147483647;")
     lines.append("\t\t\tfiles = (")
-    lines.append(f"\t\t\t\t{assets_bid} /* Assets.xcassets in Resources */,")
-    lines.append(f"\t\t\t\t{strings_bid} /* Localizable.xcstrings in Resources */,")
+    for rpath in ["Sources/SynologyMountMac/Assets.xcassets", "Sources/SynologyMountMac/Localizable.xcstrings"]:
+        _, bid = res_refs[rpath]
+        fname = os.path.basename(rpath)
+        lines.append(f"\t\t\t\t{bid} /* {fname} in Resources */,")
     lines.append("\t\t\t);")
     lines.append("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
     lines.append("\t\t};")
     lines.append("/* End PBXResourcesBuildPhase section */")
-    lines.append("")
     
-    # PBXSourcesBuildPhase
+    # PBXSourcesBuildPhase section
     lines.append("/* Begin PBXSourcesBuildPhase section */")
     lines.append(f"\t\t{SOURCES_PHASE_ID} /* Sources */ = {{")
     lines.append("\t\t\tisa = PBXSourcesBuildPhase;")
@@ -252,32 +238,24 @@ def main():
     lines.append("\t\t\trunOnlyForDeploymentPostprocessing = 0;")
     lines.append("\t\t};")
     lines.append("/* End PBXSourcesBuildPhase section */")
-    lines.append("")
     
-    # XCBuildConfiguration
+    # XCBuildConfiguration section
     lines.append("/* Begin XCBuildConfiguration section */")
     lines.append(f"\t\t{PROJ_DEBUG_CONFIG_ID} /* Debug */ = {{")
     lines.append("\t\t\tisa = XCBuildConfiguration;")
     lines.append("\t\t\tbuildSettings = {")
     lines.append("\t\t\t\tALWAYS_SEARCH_USER_PATHS = NO;")
     lines.append("\t\t\t\tCLANG_ANALYZER_NONNULL = YES;")
-    lines.append("\t\t\t\tCLANG_CXX_LANGUAGE_STANDARD = \"gnu++20\";")
     lines.append("\t\t\t\tCLANG_ENABLE_MODULES = YES;")
     lines.append("\t\t\t\tCLANG_ENABLE_OBJC_ARC = YES;")
     lines.append("\t\t\t\tCOPY_PHASE_STRIP = NO;")
     lines.append("\t\t\t\tDEBUG_INFORMATION_FORMAT = dwarf;")
     lines.append("\t\t\t\tENABLE_TESTABILITY = YES;")
-    lines.append("\t\t\t\tGCC_DYNAMIC_NO_PIC = NO;")
     lines.append("\t\t\t\tGCC_OPTIMIZATION_LEVEL = 0;")
-    lines.append("\t\t\t\tGCC_PREPROCESSOR_DEFINITIONS = (")
-    lines.append("\t\t\t\t\t\"DEBUG=1\",")
-    lines.append("\t\t\t\t\t\"$(inherited)\",")
-    lines.append("\t\t\t\t);")
     lines.append("\t\t\t\tMACOSX_DEPLOYMENT_TARGET = 14.0;")
     lines.append("\t\t\t\tMTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;")
-    lines.append("\t\t\t\tONLY_ACTIVE_ARCH = YES;")
     lines.append("\t\t\t\tSDKROOT = macosx;")
-    lines.append("\t\t\t\tSWIFT_ACTIVE_COMPILATION_CONDITIONS = \"DEBUG $(inherited)\";")
+    lines.append("\t\t\t\tSWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;")
     lines.append("\t\t\t\tSWIFT_OPTIMIZATION_LEVEL = \"-Onone\";")
     lines.append("\t\t\t};")
     lines.append("\t\t\tname = Debug;")
@@ -288,7 +266,6 @@ def main():
     lines.append("\t\t\tbuildSettings = {")
     lines.append("\t\t\t\tALWAYS_SEARCH_USER_PATHS = NO;")
     lines.append("\t\t\t\tCLANG_ANALYZER_NONNULL = YES;")
-    lines.append("\t\t\t\tCLANG_CXX_LANGUAGE_STANDARD = \"gnu++20\";")
     lines.append("\t\t\t\tCLANG_ENABLE_MODULES = YES;")
     lines.append("\t\t\t\tCLANG_ENABLE_OBJC_ARC = YES;")
     lines.append("\t\t\t\tCOPY_PHASE_STRIP = NO;")
@@ -304,59 +281,34 @@ def main():
     lines.append("\t\t\tname = Release;")
     lines.append("\t\t};")
     
-    lines.append(f"\t\t{TARGET_DEBUG_CONFIG_ID} /* Debug */ = {{")
-    lines.append("\t\t\tisa = XCBuildConfiguration;")
-    lines.append("\t\t\tbuildSettings = {")
-    lines.append("\t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;")
-    lines.append("\t\t\t\tCODE_SIGN_ENTITLEMENTS = \"Sources/SynologyMountMac/App.entitlements\";")
-    lines.append("\t\t\t\tCODE_SIGN_IDENTITY = \"-\";")
-    lines.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
-    lines.append("\t\t\t\tCOMBINE_HIDPI_IMAGES = YES;")
-    lines.append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;")
-    lines.append("\t\t\t\tENABLE_HARDENED_RUNTIME = YES;")
-    lines.append("\t\t\t\tGENERATE_INFOPLIST_FILE = NO;")
-    lines.append("\t\t\t\tINFOPLIST_FILE = \"Sources/SynologyMountMac/Info.plist\";")
-    lines.append("\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (")
-    lines.append("\t\t\t\t\t\"$(inherited)\",")
-    lines.append("\t\t\t\t\t\"@executable_path/../Frameworks\",")
-    lines.append("\t\t\t\t);")
-    lines.append("\t\t\t\tMARKETING_VERSION = 1.0;")
-    lines.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.hehljo.SynologyMount;")
-    lines.append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
-    lines.append("\t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;")
-    lines.append("\t\t\t\tSWIFT_VERSION = 5.0;")
-    lines.append("\t\t\t};")
-    lines.append("\t\t\tname = Debug;")
-    lines.append("\t\t};")
-    
-    lines.append(f"\t\t{TARGET_RELEASE_CONFIG_ID} /* Release */ = {{")
-    lines.append("\t\t\tisa = XCBuildConfiguration;")
-    lines.append("\t\t\tbuildSettings = {")
-    lines.append("\t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;")
-    lines.append("\t\t\t\tCODE_SIGN_ENTITLEMENTS = \"Sources/SynologyMountMac/App.entitlements\";")
-    lines.append("\t\t\t\tCODE_SIGN_IDENTITY = \"-\";")
-    lines.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
-    lines.append("\t\t\t\tCOMBINE_HIDPI_IMAGES = YES;")
-    lines.append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;")
-    lines.append("\t\t\t\tENABLE_HARDENED_RUNTIME = YES;")
-    lines.append("\t\t\t\tGENERATE_INFOPLIST_FILE = NO;")
-    lines.append("\t\t\t\tINFOPLIST_FILE = \"Sources/SynologyMountMac/Info.plist\";")
-    lines.append("\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (")
-    lines.append("\t\t\t\t\t\"$(inherited)\",")
-    lines.append("\t\t\t\t\t\"@executable_path/../Frameworks\",")
-    lines.append("\t\t\t\t);")
-    lines.append("\t\t\t\tMARKETING_VERSION = 1.0;")
-    lines.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.hehljo.SynologyMount;")
-    lines.append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
-    lines.append("\t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;")
-    lines.append("\t\t\t\tSWIFT_VERSION = 5.0;")
-    lines.append("\t\t\t};")
-    lines.append("\t\t\tname = Release;")
-    lines.append("\t\t};")
+    for cid, cname in [(TARGET_DEBUG_CONFIG_ID, "Debug"), (TARGET_RELEASE_CONFIG_ID, "Release")]:
+        lines.append(f"\t\t{cid} /* {cname} */ = {{")
+        lines.append("\t\t\tisa = XCBuildConfiguration;")
+        lines.append("\t\t\tbuildSettings = {")
+        lines.append("\t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;")
+        lines.append("\t\t\t\tCODE_SIGN_ENTITLEMENTS = \"Sources/SynologyMountMac/App.entitlements\";")
+        lines.append("\t\t\t\tCODE_SIGN_IDENTITY = \"-\";")
+        lines.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
+        lines.append("\t\t\t\tCOMBINE_HIDPI_IMAGES = YES;")
+        lines.append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;")
+        lines.append("\t\t\t\tENABLE_HARDENED_RUNTIME = YES;")
+        lines.append("\t\t\t\tGENERATE_INFOPLIST_FILE = NO;")
+        lines.append("\t\t\t\tINFOPLIST_FILE = \"Sources/SynologyMountMac/Info.plist\";")
+        lines.append("\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (")
+        lines.append("\t\t\t\t\t\"$(inherited)\",")
+        lines.append("\t\t\t\t\t\"@executable_path/../Frameworks\",")
+        lines.append("\t\t\t\t);")
+        lines.append("\t\t\t\tMARKETING_VERSION = 1.0;")
+        lines.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.hehljo.SynologyMount;")
+        lines.append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
+        lines.append("\t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;")
+        lines.append("\t\t\t\tSWIFT_VERSION = 5.0;")
+        lines.append("\t\t\t};")
+        lines.append(f"\t\t\tname = {cname};")
+        lines.append("\t\t};")
     lines.append("/* End XCBuildConfiguration section */")
-    lines.append("")
     
-    # XCConfigurationList
+    # XCConfigurationList section
     lines.append("/* Begin XCConfigurationList section */")
     lines.append(f"\t\t{PROJ_CONFIG_LIST_ID} /* Build configuration list for PBXProject \"SynologyMount\" */ = {{")
     lines.append("\t\t\tisa = XCConfigurationList;")
@@ -378,100 +330,15 @@ def main():
     lines.append("\t\t\tdefaultConfigurationName = Release;")
     lines.append("\t\t};")
     lines.append("/* End XCConfigurationList section */")
-    lines.append("")
     
     lines.append("\t};")
-    lines.append(f"\trootObject = {PROJ_ID} /* Project object */;")
+    lines.append(f"\trootObject = {PROJECT_ID} /* Project object */;")
     lines.append("}")
     
-    pbxproj_path = os.path.join(proj_dir, "project.pbxproj")
-    with open(pbxproj_path, "w", encoding="utf-8") as f:
+    with open(os.path.join(proj_dir, "project.pbxproj"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
-    print(f"Generated {pbxproj_path}")
-    
-    # Create Shared Scheme
-    scheme_content = f"""<?xml version="1.0" encoding="UTF-8"?>
-<Scheme
-   LastUpgradeVersion = "1500"
-   version = "1.7">
-   <BuildAction
-      parallelizeBuildables = "YES"
-      buildImplicitDependencies = "YES">
-      <BuildActionEntries>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "{TARGET_ID}"
-               BuildableName = "SynologyMount.app"
-               BlueprintName = "SynologyMount"
-               ReferencedContainer = "container:SynologyMount.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-      </BuildActionEntries>
-   </BuildAction>
-   <TestAction
-      buildConfiguration = "Debug"
-      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
-      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES"
-      shouldAutocreateTestPlan = "YES">
-   </TestAction>
-   <LaunchAction
-      buildConfiguration = "Debug"
-      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
-      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      launchStyle = "0"
-      useCustomWorkingDirectory = "NO"
-      ignoresPersistentStateOnLaunch = "NO"
-      debugDocumentVersioning = "YES"
-      debugServiceExtension = "internal"
-      allowLocationSimulation = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "{TARGET_ID}"
-            BuildableName = "SynologyMount.app"
-            BlueprintName = "SynologyMount"
-            ReferencedContainer = "container:SynologyMount.xcodeproj">
-         </BuildableReference>
-      </BuildableProductRunnable>
-   </LaunchAction>
-   <ProfileAction
-      buildConfiguration = "Release"
-      shouldUseLaunchSchemeArgsEnv = "YES"
-      savedToolIdentifier = ""
-      useCustomWorkingDirectory = "NO"
-      debugDocumentVersioning = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "{TARGET_ID}"
-            BuildableName = "SynologyMount.app"
-            BlueprintName = "SynologyMount"
-            ReferencedContainer = "container:SynologyMount.xcodeproj">
-         </BuildableReference>
-      </BuildableProductRunnable>
-   </ProfileAction>
-   <AnalyzeAction
-      buildConfiguration = "Debug">
-   </AnalyzeAction>
-   <ArchiveAction
-      buildConfiguration = "Release"
-      revealArchiveInOrganizer = "YES">
-   </ArchiveAction>
-</Scheme>
-"""
-    scheme_path = os.path.join(shared_data, "SynologyMount.xcscheme")
-    with open(scheme_path, "w", encoding="utf-8") as f:
-        f.write(scheme_content)
-    print(f"Generated {scheme_path}")
+        
+    print(f"Generated {os.path.join(proj_dir, 'project.pbxproj')}")
 
 if __name__ == "__main__":
     main()

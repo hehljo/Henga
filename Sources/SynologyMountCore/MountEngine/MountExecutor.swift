@@ -20,17 +20,31 @@ public protocol MountExecutor: Sendable {
 }
 
 #if os(macOS)
-// Apple NetFS API Deklaration
-@_silgen_name("NetFSMountURLSync")
-func NetFSMountURLSync(
-    _ url: CFURL,
-    _ mountpath: CFURL?,
-    _ user: CFString?,
-    _ password: CFString?,
-    _ open_options: CFMutableDictionary?,
-    _ mount_options: CFMutableDictionary?,
-    _ mountpoints: UnsafeMutablePointer<Unmanaged<CFArray>?>?
+// Dynamisches Laden von NetFSMountURLSync via dlsym aus /System/Library/Frameworks/NetFS.framework/NetFS
+// Dadurch entfällt ein hartes Linker-Flag im Xcode-Projekt!
+private typealias NetFSMountFunc = @convention(c) (
+    CFURL,
+    CFURL?,
+    CFString?,
+    CFString?,
+    CFMutableDictionary?,
+    CFMutableDictionary?,
+    UnsafeMutablePointer<Unmanaged<CFArray>?>?
 ) -> Int32
+
+private func invokeNetFSMount(url: CFURL, user: CFString, pass: CFString, mountpoints: inout Unmanaged<CFArray>?) -> Int32? {
+    guard let handle = dlopen("/System/Library/Frameworks/NetFS.framework/NetFS", RTLD_LAZY) else {
+        return nil
+    }
+    defer { dlclose(handle) }
+    
+    guard let sym = dlsym(handle, "NetFSMountURLSync") else {
+        return nil
+    }
+    
+    let mountFunc = unsafeBitCast(sym, to: NetFSMountFunc.self)
+    return mountFunc(url, nil, user, pass, nil, nil, &mountpoints)
+}
 #endif
 
 public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
@@ -90,7 +104,7 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
         return results
     }
     
-    /// Mountet via native Apple NetFS API (erzeugt echte Finder-Laufwerke in der Seitenleiste unter 'Orte' / 'Netzwerk')
+    /// Mountet via Apple NetFS API (dynamisch) oder Fallback auf /sbin/mount_smbfs
     public func mountVolume(url: URL, mountPoint: String, username: String, password: String?) async throws {
         guard let host = url.host else {
             throw SynoClientError.invalidHost
@@ -99,36 +113,26 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
         
         #if os(macOS)
         let smbUrlString = "smb://\(host)/\(share)"
-        guard let cfUrl = URL(string: smbUrlString) as CFURL? else {
-            throw SynoClientError.invalidHost
-        }
-        
-        print("[SynologyMount] 🍏 Führe nativen Apple NetFSMount aus: smb://\(username)@\(host)/\(share)...")
-        
-        let cfUser = username as CFString
-        let cfPass = (password ?? "") as CFString
-        
-        var mountpoints: Unmanaged<CFArray>?
-        
-        let status = NetFSMountURLSync(
-            cfUrl,
-            nil, // nil = macOS wählt automatisch /Volumes/<Share> und integriert es nativ in Finder 'Orte'
-            cfUser,
-            cfPass,
-            nil,
-            nil,
-            &mountpoints
-        )
-        
-        if status == 0 {
-            if let arrayRef = mountpoints?.takeRetainedValue() as? [String], let firstPath = arrayRef.first {
-                print("[SynologyMount] 🎉 NetFSMount erfolgreich! Gemountet unter: \(firstPath) (sichtbar im Finder unter Orte)")
+        if let cfUrl = URL(string: smbUrlString) as CFURL? {
+            print("[SynologyMount] 🍏 Führe Apple NetFS Mount aus: smb://\(username)@\(host)/\(share)...")
+            let cfUser = username as CFString
+            let cfPass = (password ?? "") as CFString
+            var mountpoints: Unmanaged<CFArray>?
+            
+            if let status = invokeNetFSMount(url: cfUrl, user: cfUser, pass: cfPass, mountpoints: &mountpoints) {
+                if status == 0 {
+                    if let arrayRef = mountpoints?.takeRetainedValue() as? [String], let firstPath = arrayRef.first {
+                        print("[SynologyMount] 🎉 NetFSMount erfolgreich! Gemountet unter: \(firstPath) (sichtbar im Finder unter Orte)")
+                    } else {
+                        print("[SynologyMount] 🎉 NetFSMount erfolgreich! (sichtbar im Finder unter Orte)")
+                    }
+                    return
+                } else {
+                    print("[SynologyMount] ⚠️ NetFSMount lieferte Status \(status). Verwende Fallback auf /sbin/mount_smbfs...")
+                }
             } else {
-                print("[SynologyMount] 🎉 NetFSMount erfolgreich! (sichtbar im Finder)")
+                print("[SynologyMount] ℹ️ NetFS.framework nicht dynamisch ladbar, verwende /sbin/mount_smbfs...")
             }
-            return
-        } else {
-            print("[SynologyMount] ⚠️ NetFSMount lieferte Fehlercode \(status). Versuche Fallback auf /sbin/mount_smbfs...")
         }
         #endif
         
