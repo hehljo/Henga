@@ -18,8 +18,10 @@ struct MenuBarContentView: View {
         }
         .padding(12)
         .frame(width: 320)
-        .task {
-            await store.syncMounts()
+        .onAppear {
+            Task {
+                await store.syncMounts()
+            }
         }
     }
     
@@ -43,17 +45,33 @@ struct MenuBarContentView: View {
         }
         
         if allShares.isEmpty {
-            Text(String(localized: "lbl_shares_count", defaultValue: "0 Freigaben"))
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 8)
+            VStack(spacing: 6) {
+                Text(String(localized: "lbl_shares_count", defaultValue: "0 Freigaben"))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                SettingsLink {
+                    Text(String(localized: "btn_add_server", defaultValue: "Server hinzufügen"))
+                        .font(.caption)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, 8)
         } else {
             VStack(alignment: .leading, spacing: 6) {
-                Text(String(localized: "menu_shares", defaultValue: "Freigaben"))
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.secondary)
+                HStack {
+                    Text(String(localized: "menu_shares", defaultValue: "Freigaben"))
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Button {
+                        Task { await store.syncMounts() }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.caption2)
+                    }
+                    .buttonStyle(.plain)
+                }
                 
                 ForEach(allShares, id: \.share.id) { item in
                     shareRow(profile: item.profile, share: item.share)
@@ -111,8 +129,8 @@ struct MenuBarContentView: View {
     @ViewBuilder
     private var actionsSection: some View {
         HStack {
-            Button(String(localized: "menu_settings", defaultValue: "Einstellungen…")) {
-                openSettings()
+            SettingsLink {
+                Text(String(localized: "menu_settings", defaultValue: "Einstellungen…"))
             }
             .buttonStyle(.link)
             
@@ -138,14 +156,6 @@ struct MenuBarContentView: View {
         let path = MountPointSanitizer.resolveMountPoint(for: share)
         let url = URL(fileURLWithPath: path)
         NSWorkspace.shared.open(url)
-    }
-    
-    private func openSettings() {
-        if #available(macOS 14.0, *) {
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-        } else {
-            NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
-        }
     }
 }
 #endif

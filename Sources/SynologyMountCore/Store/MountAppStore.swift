@@ -11,7 +11,7 @@ public final class MountAppStore: @unchecked Sendable {
     private let profileManager: ProfileManager
     private let mountManager: MountManager
     private let reachability: NetworkReachability
-    private var timer: Timer?
+    private var isSyncing = false
     
     public init(
         profileManager: ProfileManager = .shared,
@@ -42,14 +42,30 @@ public final class MountAppStore: @unchecked Sendable {
     }
     
     public func syncMounts() async {
+        let shouldProceed = await MainActor.run { () -> Bool in
+            if self.isSyncing { return false }
+            self.isSyncing = true
+            return true
+        }
+        guard shouldProceed else { return }
+        
+        defer {
+            Task { @MainActor in
+                self.isSyncing = false
+            }
+        }
+        
         await mountManager.runAutoMountCycle(profiles: profiles)
         let all = await mountManager.getAllStatuses()
+        let online = reachability.isConnected
+        let now = Date()
+        
         await MainActor.run {
             for st in all {
                 self.statuses[st.share.id] = st
             }
-            self.lastSyncTime = Date()
-            self.isNetworkOnline = self.reachability.isConnected
+            self.lastSyncTime = now
+            self.isNetworkOnline = online
         }
     }
     
