@@ -22,10 +22,12 @@ struct SynologyMountApp: App {
         }
         .menuBarExtraStyle(.window)
         
-        Settings {
+        Window("SynologyMount Einstellungen", id: "settings-window") {
             SettingsView()
                 .environment(store)
         }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
     }
     
     private var menuBarIconName: String {
