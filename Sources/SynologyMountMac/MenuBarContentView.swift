@@ -12,12 +12,12 @@ struct MenuBarContentView: View {
         VStack(alignment: .leading, spacing: 10) {
             headerSection
             Divider()
-            serversAndSharesSection
+            serversSection
             Divider()
             actionsSection
         }
-        .padding(14)
-        .frame(width: 360)
+        .padding(12)
+        .frame(width: 320)
         .onAppear {
             store.reloadProfiles()
             Task {
@@ -37,11 +37,12 @@ struct MenuBarContentView: View {
             Circle()
                 .fill(store.isNetworkOnline ? Color.green : Color.red)
                 .frame(width: 8, height: 8)
+                .help(store.isNetworkOnline ? "Netzwerk verbunden" : "Netzwerk offline")
         }
     }
     
     @ViewBuilder
-    private var serversAndSharesSection: some View {
+    private var serversSection: some View {
         if store.profiles.isEmpty {
             VStack(spacing: 8) {
                 Text(String(localized: "lbl_no_shares", defaultValue: "Keine Server konfiguriert"))
@@ -53,146 +54,80 @@ struct MenuBarContentView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
+                .help("Öffnet die Einstellungen zum Anlegen eines neuen NAS-Servers")
             }
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.vertical, 10)
         } else {
             ScrollView(.vertical) {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(spacing: 6) {
                     ForEach(store.profiles) { profile in
-                        serverBlock(profile: profile)
+                        serverRow(profile: profile)
                     }
                 }
             }
-            .frame(maxHeight: 320)
+            .frame(maxHeight: 260)
         }
     }
     
     @ViewBuilder
-    private func serverBlock(profile: ServerProfile) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            // Header pro Server / Hub mit direktem Verbinden / Trennen
-            HStack(spacing: 6) {
-                Image(systemName: "server.rack")
-                    .foregroundColor(profile.isEnabled ? .accentColor : .secondary)
-                
-                Text(profile.effectiveHubName)
-                    .font(.system(size: 13, weight: .bold))
-                
-                Spacer()
-                
-                Button {
-                    FinderSidebarHelper.shared.openInFinder(for: profile)
-                } label: {
-                    Image(systemName: "folder")
-                }
-                .buttonStyle(.borderless)
-                .help(String(localized: "open_in_finder", defaultValue: "Im Finder öffnen"))
-                
-                Button {
-                    mountSelected(for: profile)
-                } label: {
-                    Image(systemName: "play.circle")
-                        .foregroundColor(.green)
-                }
-                .buttonStyle(.borderless)
-                .help("Ausgewählte Freigaben verbinden")
-                
-                Button {
-                    unmountAll(for: profile)
-                } label: {
-                    Image(systemName: "eject")
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.borderless)
-                .help("Alle Freigaben dieses Servers trennen")
-            }
-            .padding(.horizontal, 4)
-            
-            // Liste der Shares für diesen Server
-            if profile.shares.isEmpty {
-                Text("Keine Freigaben eingerichtet.")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .padding(.leading, 8)
-            } else {
-                VStack(spacing: 4) {
-                    ForEach(profile.shares) { share in
-                        shareRow(profile: profile, share: share)
-                    }
-                }
-                .padding(.leading, 8)
-            }
-        }
-        .padding(8)
-        .background(Color(NSColor.controlBackgroundColor).opacity(0.4))
-        .cornerRadius(8)
-    }
-    
-    @ViewBuilder
-    private func shareRow(profile: ServerProfile, share: ShareMount) -> some View {
-        let status = store.statuses[share.id]?.state ?? .disconnected
+    private func serverRow(profile: ServerProfile) -> some View {
+        let autoShares = profile.shares.filter { $0.autoMount }
+        let mountedCount = autoShares.filter { store.statuses[$0.id]?.state == .mounted }.count
+        let allMounted = !autoShares.isEmpty && mountedCount == autoShares.count
+        let partiallyMounted = mountedCount > 0 && !allMounted
         
         HStack(spacing: 8) {
+            // Status-Punkt pro Server
             Circle()
-                .fill(statusColor(status))
-                .frame(width: 7, height: 7)
+                .fill(allMounted ? Color.green : (partiallyMounted ? Color.orange : Color.gray))
+                .frame(width: 8, height: 8)
+                .help(allMounted ? "\(mountedCount)/\(autoShares.count) Freigaben verbunden" : (partiallyMounted ? "\(mountedCount)/\(autoShares.count) Freigaben verbunden" : "Getrennt"))
             
             VStack(alignment: .leading, spacing: 1) {
-                Text(share.name)
-                    .font(.system(size: 12, weight: .medium))
-                Text(share.remotePath)
-                    .font(.system(size: 9))
+                Text(profile.effectiveHubName)
+                    .font(.system(size: 13, weight: .semibold))
+                
+                Text(autoShares.isEmpty ? "Keine Auto-Mounts" : "\(mountedCount) von \(autoShares.count) aktiv")
+                    .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
             
             Spacer()
             
-            if share.autoMount {
-                Text("Auto")
-                    .font(.system(size: 9))
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 1)
-                    .background(Color.secondary.opacity(0.15))
-                    .cornerRadius(4)
+            // 1. Finder-Hub öffnen
+            Button {
+                FinderSidebarHelper.shared.openInFinder(for: profile)
+            } label: {
+                Image(systemName: "folder")
             }
+            .buttonStyle(.borderless)
+            .help("Im Finder öffnen (Hub-Ordner)")
             
-            if status == .mounted {
-                Button {
-                    openInFinder(share: share)
-                } label: {
-                    Image(systemName: "arrow.up.forward.app")
-                        .foregroundColor(.accentColor)
-                }
-                .buttonStyle(.borderless)
-                .help(String(localized: "open_in_finder", defaultValue: "Im Finder öffnen"))
-                
-                Button {
-                    Task {
-                        try? await store.unmountShare(share, from: profile)
-                        updateAllFinderLinks()
-                    }
-                } label: {
-                    Image(systemName: "eject.fill")
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.borderless)
-            } else {
-                Button {
-                    Task {
-                        try? await store.mountShare(share, from: profile)
-                        updateAllFinderLinks()
-                    }
-                } label: {
-                    Image(systemName: "play.circle.fill")
-                        .foregroundColor(.green)
-                }
-                .buttonStyle(.borderless)
+            // 2. Ausgewählte Auto-Mounts verbinden
+            Button {
+                mountSelected(for: profile)
+            } label: {
+                Image(systemName: allMounted ? "checkmark.circle.fill" : "play.circle.fill")
+                    .foregroundColor(allMounted ? .green : .accentColor)
             }
+            .buttonStyle(.borderless)
+            .help("Ausgewählte Freigaben verbinden (Auto-Mounts)")
+            
+            // 3. Freigaben dieses Servers trennen
+            Button {
+                unmountAll(for: profile)
+            } label: {
+                Image(systemName: "eject.fill")
+                    .foregroundColor(.secondary)
+            }
+            .buttonStyle(.borderless)
+            .help("Alle Freigaben dieses Servers trennen")
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 3)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+        .cornerRadius(6)
     }
     
     @ViewBuilder
@@ -203,6 +138,7 @@ struct MenuBarContentView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
+            .help("Öffnet das Einstellungsfenster")
             
             Spacer()
             
@@ -217,32 +153,26 @@ struct MenuBarContentView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
-            .help("Aktualisieren")
+            .help("Status aller Server und Freigaben aktualisieren")
             
             Button(String(localized: "menu_quit", defaultValue: "Beenden")) {
                 NSApplication.shared.terminate(nil)
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
+            .help("SynologyMount beenden")
         }
-    }
-    
-    private func statusColor(_ state: MountState) -> Color {
-        switch state {
-        case .mounted: return .green
-        case .connecting, .unmounting: return .orange
-        case .disconnected: return .gray
-        case .error: return .red
-        }
-    }
-    
-    private func openInFinder(share: ShareMount) {
-        let path = MountPointSanitizer.resolveMountPoint(for: share)
-        let url = URL(fileURLWithPath: path)
-        NSWorkspace.shared.open(url)
     }
     
     private func openSettingsWindow() {
+        // Schließe das schwebende MenuBar-Popup-Fenster, wenn Einstellungen geöffnet werden
+        for window in NSApp.windows {
+            if let className = Optional(String(describing: type(of: window))),
+               className.contains("MenuBarExtra") || className.contains("Panel") {
+                window.orderOut(nil)
+            }
+        }
+        
         SettingsWindowManager.shared.showSettings(store: store)
     }
     
@@ -259,7 +189,6 @@ struct MenuBarContentView: View {
         }
     }
     
-    /// Verbindet nur die Shares, die auf "Auto" stehen (Vorauswahl)
     private func mountSelected(for profile: ServerProfile) {
         Task {
             let targets = profile.shares.filter { $0.autoMount }
