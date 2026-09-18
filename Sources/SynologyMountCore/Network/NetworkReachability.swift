@@ -42,14 +42,38 @@ public final class NetworkReachability: @unchecked Sendable {
         #endif
     }
     
-    /// Prüft ob ein TCP-Port erreichbar ist (mit POSIX non-blocking socket für absolute Verlässlichkeit)
+    /// Prüft ob ein Host im Netzwerk antwortet (versucht SMB 445 und DSM Web-Port 5001/5000)
     public func checkHostReachable(host: String, port: Int = 445, timeoutSeconds: TimeInterval = AppConfig.pingTimeoutSeconds) async -> Bool {
         guard !host.isEmpty else { return false }
         
+        let clean = host.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // 1. Erst den Zielport versuchen
+        let direct = await testSocket(host: clean, port: port, timeoutSeconds: timeoutSeconds)
+        if direct { return true }
+        
+        // 2. Falls SMB-Port 445 geblockt ist, prüfen ob die DiskStation auf DSM HTTPS (5001) oder HTTP (5000) antwortet
+        if port == 445 {
+            let webHttps = await testSocket(host: clean, port: 5001, timeoutSeconds: 1.5)
+            if webHttps {
+                print("[SynologyMount] ℹ️ DSM Port 5001 antwortet (NAS ist online), fahre mit Mount fort...")
+                return true
+            }
+            let webHttp = await testSocket(host: clean, port: 5000, timeoutSeconds: 1.5)
+            if webHttp {
+                print("[SynologyMount] ℹ️ DSM Port 5000 antwortet (NAS ist online), fahre mit Mount fort...")
+                return true
+            }
+        }
+        
+        return false
+    }
+    
+    private func testSocket(host: String, port: Int, timeoutSeconds: TimeInterval) async -> Bool {
         let task = Task.detached(priority: .utility) { () -> Bool in
             #if os(macOS) || os(Linux)
             var hints = addrinfo()
-            hints.ai_family = AF_UNSPEC
+            hints.ai_family = AF_INET // IPv4 zuerst
             #if os(Linux)
             hints.ai_socktype = Int32(SOCK_STREAM.rawValue)
             #else
@@ -69,7 +93,6 @@ public final class NetworkReachability: @unchecked Sendable {
             guard sock >= 0 else { return false }
             defer { close(sock) }
             
-            // Setze non-blocking
             let flags = fcntl(sock, F_GETFL, 0)
             _ = fcntl(sock, F_SETFL, flags | O_NONBLOCK)
             
@@ -92,7 +115,6 @@ public final class NetworkReachability: @unchecked Sendable {
                 getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &len)
                 return err == 0
             }
-            
             return false
             #else
             return true
