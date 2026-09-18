@@ -8,6 +8,7 @@ import SynologyMountCore
 struct SettingsView: View {
     @Environment(MountAppStore.self) private var store
     @State private var selectedProfileId: UUID?
+    @State private var launchAtLogin = LaunchAtLoginHelper.shared.isEnabled
     
     var body: some View {
         NavigationSplitView {
@@ -18,6 +19,7 @@ struct SettingsView: View {
         .frame(minWidth: 720, minHeight: 520)
         .onAppear {
             store.reloadProfiles()
+            launchAtLogin = LaunchAtLoginHelper.shared.isEnabled
             if selectedProfileId == nil, let first = store.profiles.first {
                 selectedProfileId = first.id
             }
@@ -50,16 +52,24 @@ struct SettingsView: View {
             
             Divider()
             
-            HStack {
-                Button {
-                    createNewProfile()
-                } label: {
-                    Label(String(localized: "btn_add_server", defaultValue: "Server hinzufügen"), systemImage: "plus")
-                }
-                .buttonStyle(.borderless)
-                .controlSize(.small)
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle("Bei Anmeldung starten", isOn: $launchAtLogin)
+                    .font(.caption)
+                    .onChange(of: launchAtLogin) { _, newValue in
+                        _ = LaunchAtLoginHelper.shared.setEnabled(newValue)
+                    }
                 
-                Spacer()
+                HStack {
+                    Button {
+                        createNewProfile()
+                    } label: {
+                        Label(String(localized: "btn_add_server", defaultValue: "Server hinzufügen"), systemImage: "plus")
+                    }
+                    .buttonStyle(.borderless)
+                    .controlSize(.small)
+                    
+                    Spacer()
+                }
             }
             .padding(10)
             .background(Color(NSColor.controlBackgroundColor))
