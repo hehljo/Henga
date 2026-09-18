@@ -86,7 +86,7 @@ public actor MountManager {
         // 4. Passwort ermitteln (übergeben oder aus Keychain)
         let pw = password ?? keychain.getPassword(for: profile.username)
         if pw == nil || pw?.isEmpty == true {
-            print("[SynologyMount] ⚠️ Kein Passwort im Keychain gefunden für User '\(profile.username)'. Mount wird als Gast/anonym versucht...")
+            print("[SynologyMount] ⚠️ Kein Passwort im Keychain für User '\(profile.username)' hinterlegt.")
         }
         
         do {
@@ -129,15 +129,17 @@ public actor MountManager {
         await refreshMountStatuses(profiles: profiles)
         
         for profile in profiles where profile.isEnabled {
-            // Prüfen ob Host im Netzwerk antwortet
-            let isReachable = await reachability.checkHostReachable(host: profile.cleanHost, port: profile.smbPort)
-            print("[SynologyMount] 🌐 Host \(profile.cleanHost):\(profile.smbPort) Erreichbarkeits-Check: \(isReachable ? "ONLINE ✅" : "OFFLINE ❌")")
-            guard isReachable else { continue }
+            let autoShares = profile.shares.filter { $0.autoMount }
+            guard !autoShares.isEmpty else { continue }
             
-            for share in profile.shares where share.autoMount {
+            // Prüfen ob Host im Netzwerk antwortet (Port 445 oder DSM Port)
+            let isSmbReachable = await reachability.checkHostReachable(host: profile.cleanHost, port: profile.smbPort)
+            print("[SynologyMount] 🌐 Host \(profile.cleanHost):\(profile.smbPort) SMB-Port-Check: \(isSmbReachable ? "OFFEN ✅" : "BLOCKIERT/OFFLINE ❌")")
+            
+            for share in autoShares {
                 let current = statuses[share.id]?.state ?? .disconnected
                 if current == .disconnected || current == .error {
-                    print("[SynologyMount] 🔄 Auto-Mounting aktiviert für '\(share.name)'...")
+                    print("[SynologyMount] 🔄 Versuche Auto-Mount für '\(share.name)'...")
                     try? await mount(share: share, profile: profile)
                 }
             }
