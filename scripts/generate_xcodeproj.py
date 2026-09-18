@@ -97,7 +97,12 @@ def main():
     for rpath in res_files:
         fid, _ = res_refs[rpath]
         fname = os.path.basename(rpath)
-        ftype = "folder.assetcatalog" if rpath.endswith(".xcassets") else ("text.plist.strings" if rpath.endswith(".xcstrings") else "text.plist.xml")
+        if rpath.endswith(".xcassets"):
+            ftype = "folder.assetcatalog"
+        elif rpath.endswith(".xcstrings"):
+            ftype = "text.json.xcstrings"
+        else:
+            ftype = "text.plist.xml"
         lines.append(f"\t\t{fid} /* {fname} */ = {{isa = PBXFileReference; lastKnownFileType = {ftype}; name = \"{fname}\"; path = \"{rpath}\"; sourceTree = SOURCE_ROOT; }};")
     lines.append("/* End PBXFileReference section */")
     
@@ -190,6 +195,11 @@ def main():
     lines.append("\t\t\tattributes = {")
     lines.append("\t\t\t\tBuildIndependentTargetsInParallel = 1;")
     lines.append("\t\t\t\tLastUpgradeCheck = 1600;")
+    lines.append("\t\t\t\tTargetAttributes = {")
+    lines.append(f"\t\t\t\t\t{TARGET_ID} = {{")
+    lines.append("\t\t\t\t\t\tCreatedOnToolsVersion = 16.0;")
+    lines.append("\t\t\t\t\t};")
+    lines.append("\t\t\t\t};")
     lines.append("\t\t\t};")
     lines.append(f"\t\t\tbuildConfigurationList = {PROJ_CONFIG_LIST_ID} /* Build configuration list for PBXProject \"SynologyMount\" */;")
     lines.append("\t\t\tcompatibilityVersion = \"Xcode 14.0\";")

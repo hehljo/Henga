@@ -48,7 +48,7 @@
 		C36A739761CC0FFE75A6E709 /* MenuBarContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "MenuBarContentView.swift"; path = "Sources/SynologyMountMac/MenuBarContentView.swift"; sourceTree = SOURCE_ROOT; };
 		A71DCB50C040BAFD9449B8D2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "SettingsView.swift"; path = "Sources/SynologyMountMac/SettingsView.swift"; sourceTree = SOURCE_ROOT; };
 		A18DA67ECD20B2D481F60392 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = "Assets.xcassets"; path = "Sources/SynologyMountMac/Assets.xcassets"; sourceTree = SOURCE_ROOT; };
-		B9E526D3D0E79CD731F204D2 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "Localizable.xcstrings"; path = "Sources/SynologyMountMac/Localizable.xcstrings"; sourceTree = SOURCE_ROOT; };
+		B9E526D3D0E79CD731F204D2 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = "Localizable.xcstrings"; path = "Sources/SynologyMountMac/Localizable.xcstrings"; sourceTree = SOURCE_ROOT; };
 		D5FFE91C160DEB805B4183BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info.plist"; path = "Sources/SynologyMountMac/Info.plist"; sourceTree = SOURCE_ROOT; };
 		FD62ADCCF79F387D5A8071F5 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "App.entitlements"; path = "Sources/SynologyMountMac/App.entitlements"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -141,6 +141,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					92385BE564346F800061BF0C = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
 			};
 			buildConfigurationList = CB7CBE0C3B42E7D081FECC31 /* Build configuration list for PBXProject "SynologyMount" */;
 			compatibilityVersion = "Xcode 14.0";
