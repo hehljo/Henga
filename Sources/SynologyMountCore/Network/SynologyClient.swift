@@ -3,11 +3,11 @@ import Foundation
 public enum SynoClientError: Error, LocalizedError, Equatable {
     case invalidHost
     case networkError(String)
-    case serverError(Int)
+    case serverError(Int, String?)
     case twoFactorRequired
     case invalidTwoFactorCode
     case unauthenticated
-    case decodingError
+    case decodingError(String)
     
     public var errorDescription: String? {
         switch self {
@@ -19,19 +19,27 @@ public enum SynoClientError: Error, LocalizedError, Equatable {
             return "2-Faktor-Authentifizierung (2FA) erforderlich. Bitte 6-stelligen OTP Code eingeben (403)."
         case .invalidTwoFactorCode:
             return "Ungültiger 2FA / OTP Code. Bitte Code prüfen (404)."
-        case .serverError(let code):
+        case .serverError(let code, let msg):
+            let detail = msg != nil ? " - \(msg!)" : ""
             switch code {
-            case 400: return "Ungültiger Benutzername oder Passwort (400)"
-            case 403: return "2-Faktor-Authentifizierung (2FA) aktiv: Bitte 6-stelligen OTP-Code eingeben (403)"
-            case 404: return "Ungültiger 2FA / OTP Code. Bitte Code prüfen (404)"
-            default: return "Synology Fehlercode: \(code)"
+            case 400: return "Ungültiger Benutzername oder Passwort (400)\(detail)"
+            case 403: return "2-Faktor-Authentifizierung (2FA) aktiv: Bitte 6-stelligen OTP-Code eingeben (403)\(detail)"
+            case 404: return "Ungültiger 2FA / OTP Code. Bitte Code prüfen (404)\(detail)"
+            default: return "Synology Fehlercode \(code)\(detail)"
             }
         case .unauthenticated:
             return "Authentifizierung fehlgeschlagen."
-        case .decodingError:
-            return "Antwort konnte nicht verarbeitet werden."
+        case .decodingError(let raw):
+            return "Antwortformat unerwartet: \(raw)"
         }
     }
+}
+
+public struct SynoApiInfoResult: Codable, Sendable {
+    public let path: String
+    public let minVersion: Int
+    public let maxVersion: Int
+    public let requestFormat: String?
 }
 
 public actor SynologyClient {
@@ -39,6 +47,7 @@ public actor SynologyClient {
     private var sid: String?
     private let session: URLSession
     private let sessionDelegate: SynologySessionDelegate
+    private var apiInfoCache: [String: SynoApiInfoResult] = [:]
     
     public init(profile: ServerProfile) {
         self.profile = profile
@@ -53,6 +62,32 @@ public actor SynologyClient {
         #else
         self.session = URLSession(configuration: config)
         #endif
+    }
+    
+    /// Ruft SYNO.API.Info ab (Meta-Discovery laut Guideline, um exakte Pfade und Versionen zu ermitteln)
+    public func discoverApis(query: String = "SYNO.FileStation,SYNO.API.Auth") async -> [String: SynoApiInfoResult] {
+        guard let baseURL = profile.dsmBaseURL else { return [:] }
+        var comp = URLComponents(url: baseURL.appendingPathComponent("query.cgi"), resolvingAgainstBaseURL: false)
+        comp?.queryItems = [
+            URLQueryItem(name: "api", value: "SYNO.API.Info"),
+            URLQueryItem(name: "version", value: "1"),
+            URLQueryItem(name: "method", value: "query"),
+            URLQueryItem(name: "query", value: query)
+        ]
+        guard let url = comp?.url, let (data, _) = try? await session.data(from: url) else {
+            return [:]
+        }
+        
+        struct InfoResponse: Codable {
+            let success: Bool
+            let data: [String: SynoApiInfoResult]?
+        }
+        
+        if let decoded = try? JSONDecoder().decode(InfoResponse.self, from: data), decoded.success, let map = decoded.data {
+            self.apiInfoCache = map
+            return map
+        }
+        return [:]
     }
     
     /// Login bei Synology DSM WebAPI mit 2FA/OTP- und "Gerät merken" (did) Unterstützung
@@ -72,7 +107,6 @@ public actor SynologyClient {
             URLQueryItem(name: "device_name", value: profile.deviceName)
         ]
         
-        // Gespeicherten Token (did) mitsenden falls vorhanden
         if let savedDid = profile.deviceID, !savedDid.isEmpty {
             queryItems.append(URLQueryItem(name: "device_id", value: savedDid))
         } else if let otp = otpCode?.trimmingCharacters(in: .whitespacesAndNewlines), !otp.isEmpty {
@@ -91,7 +125,14 @@ public actor SynologyClient {
             throw SynoClientError.networkError("HTTP Status ungültig")
         }
         
-        let apiResp = try JSONDecoder().decode(SynoApiResponse<SynoAuthResponse>.self, from: data)
+        let apiResp: SynoApiResponse<SynoAuthResponse>
+        do {
+            apiResp = try JSONDecoder().decode(SynoApiResponse<SynoAuthResponse>.self, from: data)
+        } catch {
+            let raw = String(data: data.prefix(200), encoding: .utf8) ?? ""
+            throw SynoClientError.decodingError("Login-Antwort: \(raw)")
+        }
+        
         guard apiResp.success, let authData = apiResp.data else {
             let code = apiResp.error?.code ?? -1
             if code == 403 {
@@ -99,7 +140,7 @@ public actor SynologyClient {
             } else if code == 404 {
                 throw SynoClientError.invalidTwoFactorCode
             }
-            throw SynoClientError.serverError(code)
+            throw SynoClientError.serverError(code, nil)
         }
         
         self.sid = authData.sid
@@ -110,7 +151,7 @@ public actor SynologyClient {
         return (authData.sid, did)
     }
     
-    /// Holt Liste aller freigegebenen gemeinsamen Ordner (Shared Folders)
+    /// Holt Liste aller freigegebenen gemeinsamen Ordner (Shared Folders) mit Versions-Discovery und flexiblen JSON-Formaten
     public func listSharedFolders() async throws -> [SynoSharedFolder] {
         guard let baseURL = profile.dsmBaseURL else {
             throw SynoClientError.invalidHost
@@ -119,14 +160,22 @@ public actor SynologyClient {
             throw SynoClientError.unauthenticated
         }
         
+        // 1. Meta-Discovery für SYNO.FileStation.List abrufen
+        if apiInfoCache.isEmpty {
+            _ = await discoverApis(query: "SYNO.FileStation.List")
+        }
+        
+        let targetVersion = String(apiInfoCache["SYNO.FileStation.List"]?.maxVersion ?? 2)
+        let cgiPath = apiInfoCache["SYNO.FileStation.List"]?.path ?? "entry.cgi"
+        
         let queryItems = [
             URLQueryItem(name: "api", value: "SYNO.FileStation.List"),
-            URLQueryItem(name: "version", value: "2"),
+            URLQueryItem(name: "version", value: targetVersion),
             URLQueryItem(name: "method", value: "list_share"),
             URLQueryItem(name: "_sid", value: currentSid)
         ]
         
-        var comp = URLComponents(url: baseURL.appendingPathComponent("entry.cgi"), resolvingAgainstBaseURL: false)
+        var comp = URLComponents(url: baseURL.appendingPathComponent(cgiPath), resolvingAgainstBaseURL: false)
         comp?.queryItems = queryItems
         
         guard let url = comp?.url else {
@@ -134,15 +183,40 @@ public actor SynologyClient {
         }
         
         let (data, _) = try await session.data(from: url)
-        let apiResp = try JSONDecoder().decode(SynoApiResponse<SynoSharedFoldersData>.self, from: data)
         
-        guard apiResp.success, let shareData = apiResp.data else {
-            let code = apiResp.error?.code ?? -1
-            throw SynoClientError.serverError(code)
+        // Flexible Decoding Strategie für unterschiedliche DSM Versionen
+        // Variante A: { "data": { "shares": [ ... ] } }
+        if let apiResp = try? JSONDecoder().decode(SynoApiResponse<SynoSharedFoldersData>.self, from: data),
+           apiResp.success, let shareData = apiResp.data {
+            return shareData.shares.map {
+                SynoSharedFolder(name: $0.name, path: $0.path, isDir: $0.isdir)
+            }
         }
         
-        return shareData.shares.map {
-            SynoSharedFolder(name: $0.name, path: $0.path, isDir: $0.isdir)
+        // Variante B: { "data": [ { "name": "...", "path": "..." } ] }
+        struct DirectListResponse: Codable {
+            let success: Bool
+            let data: [SynoFolderEntry]?
+            let error: SynoApiErrorPayload?
         }
+        if let directResp = try? JSONDecoder().decode(DirectListResponse.self, from: data),
+           directResp.success, let entries = directResp.data {
+            return entries.map {
+                SynoSharedFolder(name: $0.name, path: $0.path, isDir: $0.isdir)
+            }
+        }
+        
+        // Fehler auswerten falls Synology API Error gemeldet hat
+        struct GenericErrorResp: Codable {
+            let success: Bool
+            let error: SynoApiErrorPayload?
+        }
+        if let errResp = try? JSONDecoder().decode(GenericErrorResp.self, from: data), !errResp.success {
+            let code = errResp.error?.code ?? -1
+            throw SynoClientError.serverError(code, "FileStation list_share")
+        }
+        
+        let rawSnippet = String(data: data.prefix(150), encoding: .utf8) ?? "Keine lesbaren Daten"
+        throw SynoClientError.decodingError(rawSnippet)
     }
 }
