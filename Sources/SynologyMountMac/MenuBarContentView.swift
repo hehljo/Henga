@@ -17,8 +17,9 @@ struct MenuBarContentView: View {
             actionsSection
         }
         .padding(14)
-        .frame(width: 330)
+        .frame(width: 340)
         .onAppear {
+            store.reloadProfiles()
             Task {
                 await store.syncMounts()
             }
@@ -50,7 +51,7 @@ struct MenuBarContentView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
-                Button(String(localized: "btn_add_server", defaultValue: "Server hinzufügen")) {
+                Button(String(localized: "btn_add_server", defaultValue: "Server konfigurieren")) {
                     openSettingsWindow()
                 }
                 .buttonStyle(.borderedProminent)
@@ -79,11 +80,34 @@ struct MenuBarContentView: View {
                             .font(.caption2)
                     }
                     .buttonStyle(.borderless)
+                    .help(String(localized: "menu_mount_all", defaultValue: "Alle aktualisieren / verbinden"))
                 }
                 
-                ForEach(allShares, id: \.share.id) { item in
-                    shareRow(profile: item.profile, share: item.share)
+                ScrollView(.vertical) {
+                    VStack(spacing: 4) {
+                        ForEach(allShares, id: \.share.id) { item in
+                            shareRow(profile: item.profile, share: item.share)
+                        }
+                    }
                 }
+                .frame(maxHeight: 280)
+                
+                HStack {
+                    Button(String(localized: "menu_mount_all", defaultValue: "Alle verbinden")) {
+                        mountAll()
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.caption2)
+                    
+                    Spacer()
+                    
+                    Button(String(localized: "menu_unmount_all", defaultValue: "Alle trennen")) {
+                        unmountAll()
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.caption2)
+                }
+                .padding(.top, 4)
             }
         }
     }
@@ -95,12 +119,12 @@ struct MenuBarContentView: View {
         HStack(spacing: 8) {
             Circle()
                 .fill(statusColor(status))
-                .frame(width: 7, height: 7)
+                .frame(width: 8, height: 8)
             
             VStack(alignment: .leading, spacing: 1) {
                 Text(share.name)
                     .font(.system(size: 13, weight: .medium))
-                Text(profile.name)
+                Text(share.remotePath)
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
@@ -112,6 +136,7 @@ struct MenuBarContentView: View {
                     openInFinder(share: share)
                 } label: {
                     Image(systemName: "folder")
+                        .foregroundColor(.accentColor)
                 }
                 .buttonStyle(.borderless)
                 .help(String(localized: "open_in_finder", defaultValue: "Im Finder öffnen"))
@@ -120,18 +145,25 @@ struct MenuBarContentView: View {
                     Task { try? await store.unmountShare(share, from: profile) }
                 } label: {
                     Image(systemName: "eject.fill")
+                        .foregroundColor(.secondary)
                 }
                 .buttonStyle(.borderless)
+                .help(String(localized: "menu_unmount_all", defaultValue: "Trennen"))
             } else {
                 Button {
                     Task { try? await store.mountShare(share, from: profile) }
                 } label: {
-                    Image(systemName: "play.circle")
+                    Image(systemName: "play.circle.fill")
+                        .foregroundColor(.green)
                 }
                 .buttonStyle(.borderless)
+                .help(String(localized: "menu_mount_all", defaultValue: "Verbinden"))
             }
         }
-        .padding(.vertical, 3)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
+        .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+        .cornerRadius(6)
     }
     
     @ViewBuilder
@@ -170,6 +202,26 @@ struct MenuBarContentView: View {
     
     private func openSettingsWindow() {
         SettingsWindowManager.shared.showSettings(store: store)
+    }
+    
+    private func mountAll() {
+        Task {
+            for profile in store.profiles where profile.isEnabled {
+                for share in profile.shares {
+                    try? await store.mountShare(share, from: profile)
+                }
+            }
+        }
+    }
+    
+    private func unmountAll() {
+        Task {
+            for profile in store.profiles {
+                for share in profile.shares {
+                    try? await store.unmountShare(share, from: profile)
+                }
+            }
+        }
     }
 }
 #endif

@@ -123,6 +123,7 @@ struct ProfileDetailEditView: View {
     @State private var isDetectingShares = false
     @State private var detectionError: String?
     @State private var copiedToClipboard = false
+    @State private var showSavedNotice = false
     
     var body: some View {
         ScrollView(.vertical) {
@@ -243,11 +244,20 @@ struct ProfileDetailEditView: View {
                             onDelete()
                         }
                         Spacer()
+                        if showSavedNotice {
+                            Text("Gespeichert!")
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        }
                         Button(String(localized: "btn_save", defaultValue: "Speichern")) {
                             if !password.isEmpty {
                                 _ = KeychainHelper.shared.savePassword(password, for: profile.username)
                             }
                             onSave(profile)
+                            showSavedNotice = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                showSavedNotice = false
+                            }
                         }
                         .buttonStyle(.borderedProminent)
                     }
