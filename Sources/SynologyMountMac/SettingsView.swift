@@ -15,7 +15,7 @@ struct SettingsView: View {
         } detail: {
             detailSection
         }
-        .frame(minWidth: 720, minHeight: 480)
+        .frame(minWidth: 720, minHeight: 520)
         .onAppear {
             if selectedProfileId == nil, let first = store.profiles.first {
                 selectedProfileId = first.id
@@ -125,134 +125,136 @@ struct ProfileDetailEditView: View {
     @State private var copiedToClipboard = false
     
     var body: some View {
-        Form {
-            Section(header: Text(String(localized: "lbl_server_info_section", defaultValue: "Server-Informationen"))) {
-                TextField(String(localized: "lbl_server_name", defaultValue: "Servername"), text: $profile.name)
-                TextField(String(localized: "lbl_server_host", defaultValue: "Host / IP"), text: $profile.host)
-                TextField(String(localized: "lbl_username", defaultValue: "Benutzername"), text: $profile.username)
-                SecureField(String(localized: "lbl_password", defaultValue: "Passwort"), text: $password)
-                
-                if profile.deviceID != nil {
-                    HStack {
-                        Image(systemName: "checkmark.shield.fill")
-                            .foregroundColor(.green)
-                        Text(String(localized: "lbl_device_trusted_status", defaultValue: "Dieses Gerät ist vertrauenswürdig (2FA hinterlegt)"))
-                            .font(.caption)
-                    }
-                }
-                
-                if showOtpPrompt {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(String(localized: "lbl_otp_prompt", defaultValue: "2FA erforderlich"))
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                        
+        ScrollView(.vertical) {
+            Form {
+                Section(header: Text(String(localized: "lbl_server_info_section", defaultValue: "Server-Informationen"))) {
+                    TextField(String(localized: "lbl_server_name", defaultValue: "Servername"), text: $profile.name)
+                    TextField(String(localized: "lbl_server_host", defaultValue: "Host / IP"), text: $profile.host)
+                    TextField(String(localized: "lbl_username", defaultValue: "Benutzername"), text: $profile.username)
+                    SecureField(String(localized: "lbl_password", defaultValue: "Passwort"), text: $password)
+                    
+                    if profile.deviceID != nil {
                         HStack {
-                            TextField(String(localized: "lbl_otp_code", defaultValue: "2FA / OTP Code"), text: $otpCode)
-                                .textFieldStyle(.roundedBorder)
-                            Button(String(localized: "btn_detect_shares", defaultValue: "Bestätigen")) {
-                                detectShares()
-                            }
-                        }
-                        
-                        Toggle(String(localized: "lbl_remember_device", defaultValue: "Dieses Gerät dauerhaft merken"), isOn: $rememberDevice)
-                            .font(.caption)
-                    }
-                    .padding(.vertical, 4)
-                }
-                
-                Toggle(String(localized: "lbl_automount", defaultValue: "Server aktiv"), isOn: $profile.isEnabled)
-            }
-            
-            Section(header: Text(String(localized: "menu_shares", defaultValue: "Freigaben (Shares)"))) {
-                if profile.shares.isEmpty {
-                    Text(String(localized: "lbl_no_shares", defaultValue: "Noch keine Freigaben hinzugefügt."))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                ForEach($profile.shares) { $share in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            TextField("Name", text: $share.name)
-                            TextField("Remote Pfad (z.B. video)", text: $share.remotePath)
+                            Image(systemName: "checkmark.shield.fill")
+                                .foregroundColor(.green)
+                            Text(String(localized: "lbl_device_trusted_status", defaultValue: "Dieses Gerät ist vertrauenswürdig (2FA hinterlegt)"))
                                 .font(.caption)
-                                .foregroundColor(.secondary)
                         }
+                    }
+                    
+                    if showOtpPrompt {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(String(localized: "lbl_otp_prompt", defaultValue: "2FA erforderlich"))
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                            
+                            HStack {
+                                TextField(String(localized: "lbl_otp_code", defaultValue: "2FA / OTP Code"), text: $otpCode)
+                                    .textFieldStyle(.roundedBorder)
+                                Button(String(localized: "btn_detect_shares", defaultValue: "Bestätigen")) {
+                                    detectShares()
+                                }
+                            }
+                            
+                            Toggle(String(localized: "lbl_remember_device", defaultValue: "Dieses Gerät dauerhaft merken"), isOn: $rememberDevice)
+                                .font(.caption)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    
+                    Toggle(String(localized: "lbl_automount", defaultValue: "Server aktiv"), isOn: $profile.isEnabled)
+                }
+                
+                Section(header: Text(String(localized: "menu_shares", defaultValue: "Freigaben (Shares)"))) {
+                    if profile.shares.isEmpty {
+                        Text(String(localized: "lbl_no_shares", defaultValue: "Noch keine Freigaben hinzugefügt."))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    ForEach($profile.shares) { $share in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                TextField("Name", text: $share.name)
+                                TextField("Remote Pfad (z.B. video)", text: $share.remotePath)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            Toggle("Auto", isOn: $share.autoMount)
+                                .labelsHidden()
+                            Button {
+                                removeShare(share.id)
+                            } label: {
+                                Image(systemName: "trash")
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    
+                    HStack {
+                        Button(String(localized: "btn_add_share", defaultValue: "Freigabe manuell hinzufügen")) {
+                            profile.shares.append(ShareMount(name: "Neue Freigabe", remotePath: "share"))
+                        }
+                        
                         Spacer()
-                        Toggle("Auto", isOn: $share.autoMount)
-                            .labelsHidden()
-                        Button {
-                            removeShare(share.id)
-                        } label: {
-                            Image(systemName: "trash")
+                        
+                        Button(String(localized: "btn_detect_shares", defaultValue: "Freigaben automatisch erkennen")) {
+                            detectShares()
                         }
-                        .buttonStyle(.plain)
+                        .disabled(isDetectingShares || profile.cleanHost.isEmpty)
                     }
                 }
                 
-                HStack {
-                    Button(String(localized: "btn_add_share", defaultValue: "Freigabe manuell hinzufügen")) {
-                        profile.shares.append(ShareMount(name: "Neue Freigabe", remotePath: "share"))
-                    }
-                    
-                    Spacer()
-                    
-                    Button(String(localized: "btn_detect_shares", defaultValue: "Freigaben automatisch erkennen")) {
-                        detectShares()
-                    }
-                    .disabled(isDetectingShares || profile.cleanHost.isEmpty)
-                }
-            }
-            
-            if let err = detectionError {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.red)
-                        Text(err)
-                            .foregroundColor(.red)
-                            .font(.caption)
-                            .textSelection(.enabled)
-                        
-                        Spacer()
-                        
-                        Button {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(err, forType: .string)
-                            copiedToClipboard = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                copiedToClipboard = false
+                if let err = detectionError {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.red)
+                            Text(err)
+                                .foregroundColor(.red)
+                                .font(.caption)
+                                .textSelection(.enabled)
+                            
+                            Spacer()
+                            
+                            Button {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(err, forType: .string)
+                                copiedToClipboard = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                    copiedToClipboard = false
+                                }
+                            } label: {
+                                Label(copiedToClipboard ? "Kopiert!" : "Fehler kopieren", systemImage: copiedToClipboard ? "checkmark" : "doc.on.doc")
+                                    .font(.caption2)
                             }
-                        } label: {
-                            Label(copiedToClipboard ? "Kopiert!" : "Fehler kopieren", systemImage: copiedToClipboard ? "checkmark" : "doc.on.doc")
-                                .font(.caption2)
+                            .buttonStyle(.borderless)
                         }
-                        .buttonStyle(.borderless)
+                    }
+                    .padding(8)
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(6)
+                }
+                
+                Section {
+                    HStack {
+                        Button(String(localized: "btn_delete", defaultValue: "Löschen"), role: .destructive) {
+                            onDelete()
+                        }
+                        Spacer()
+                        Button(String(localized: "btn_save", defaultValue: "Speichern")) {
+                            if !password.isEmpty {
+                                _ = KeychainHelper.shared.savePassword(password, for: profile.username)
+                            }
+                            onSave(profile)
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
                 }
-                .padding(8)
-                .background(Color.red.opacity(0.1))
-                .cornerRadius(6)
             }
-            
-            Section {
-                HStack {
-                    Button(String(localized: "btn_delete", defaultValue: "Löschen"), role: .destructive) {
-                        onDelete()
-                    }
-                    Spacer()
-                    Button(String(localized: "btn_save", defaultValue: "Speichern")) {
-                        if !password.isEmpty {
-                            _ = KeychainHelper.shared.savePassword(password, for: profile.username)
-                        }
-                        onSave(profile)
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-            }
+            .padding(16)
         }
-        .padding(16)
         .onAppear {
             if let savedPw = KeychainHelper.shared.getPassword(for: profile.username) {
                 self.password = savedPw
