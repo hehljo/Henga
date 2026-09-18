@@ -1,7 +1,9 @@
 #if canImport(AppKit) && canImport(SwiftUI)
 import SwiftUI
 import AppKit
+#if canImport(SynologyMountCore)
 import SynologyMountCore
+#endif
 
 struct MenuBarContentView: View {
     @Environment(MountAppStore.self) private var store

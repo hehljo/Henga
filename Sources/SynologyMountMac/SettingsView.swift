@@ -1,7 +1,9 @@
 #if canImport(AppKit) && canImport(SwiftUI)
 import SwiftUI
 import AppKit
+#if canImport(SynologyMountCore)
 import SynologyMountCore
+#endif
 
 struct SettingsView: View {
     @Environment(MountAppStore.self) private var store

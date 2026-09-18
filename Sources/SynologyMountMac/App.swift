@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(SynologyMountCore)
 import SynologyMountCore
+#endif
 
 #if canImport(AppKit) && canImport(SwiftUI)
 import SwiftUI
