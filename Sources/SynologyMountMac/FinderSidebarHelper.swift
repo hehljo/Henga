@@ -6,37 +6,36 @@ import AppKit
 public final class FinderSidebarHelper: @unchecked Sendable {
     public static let shared = FinderSidebarHelper()
     
-    private let brandFolderURL: URL
+    private let homeDir: URL
     
     public init() {
-        // Erstelle zentralen Anker-Ordner im Benutzerverzeichnis, z.B. ~/SynologyMount
-        let home = FileManager.default.homeDirectoryForCurrentUser
-        self.brandFolderURL = home.appendingPathComponent(AppConfig.brandName, isDirectory: true)
-        ensureBrandFolderExists()
+        self.homeDir = FileManager.default.homeDirectoryForCurrentUser
     }
     
-    public var rootURL: URL {
-        brandFolderURL
+    /// Ermittelt die URL des Hub-Ordners für ein bestimmtes Profil
+    public func hubFolderURL(for profile: ServerProfile) -> URL {
+        return homeDir.appendingPathComponent(profile.effectiveHubName, isDirectory: true)
     }
     
-    /// Stellt sicher, dass ~/SynologyMount existiert und ein schönes Icon / Symlinks bekommt
-    public func ensureBrandFolderExists() {
+    /// Stellt sicher, dass der Hub-Ordner für das Profil existiert
+    public func ensureHubFolderExists(for profile: ServerProfile) {
+        let folder = hubFolderURL(for: profile)
         let fm = FileManager.default
-        if !fm.fileExists(atPath: brandFolderURL.path) {
-            try? fm.createDirectory(at: brandFolderURL, withIntermediateDirectories: true)
+        if !fm.fileExists(atPath: folder.path) {
+            try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
         }
     }
     
-    /// Erzeugt dynamisch Symlinks innerhalb von ~/SynologyMount zu den echten gemounteten Volumes
-    public func updateFinderLinks(activeMountPoints: [(name: String, path: String)]) {
-        ensureBrandFolderExists()
+    /// Aktualisiert die Symlinks im Hub-Ordner eines Servers
+    public func updateFinderLinks(for profile: ServerProfile, activeShares: [(name: String, path: String)]) {
+        ensureHubFolderExists(for: profile)
+        let folder = hubFolderURL(for: profile)
         let fm = FileManager.default
         
-        // 1. Bestehende Symlinks in ~/SynologyMount lesen
-        if let existing = try? fm.contentsOfDirectory(atPath: brandFolderURL.path) {
+        // 1. Alte Symlinks löschen
+        if let existing = try? fm.contentsOfDirectory(atPath: folder.path) {
             for item in existing {
-                let itemPath = brandFolderURL.appendingPathComponent(item).path
-                // Nur Symlinks löschen
+                let itemPath = folder.appendingPathComponent(item).path
                 if let attrs = try? fm.attributesOfItem(atPath: itemPath),
                    let type = attrs[.type] as? FileAttributeType, type == .typeSymbolicLink {
                     try? fm.removeItem(atPath: itemPath)
@@ -45,38 +44,39 @@ public final class FinderSidebarHelper: @unchecked Sendable {
         }
         
         // 2. Neue Symlinks für aktive Freigaben erstellen
-        for item in activeMountPoints {
-            let linkURL = brandFolderURL.appendingPathComponent(item.name)
+        for item in activeShares {
+            let linkURL = folder.appendingPathComponent(item.name)
             try? fm.createSymbolicLink(at: linkURL, withDestinationURL: URL(fileURLWithPath: item.path))
-            print("[SynologyMount] 🔗 Finder-Link aktualisiert: ~/SynologyMount/\(item.name) -> \(item.path)")
+            print("[SynologyMount] 🔗 Finder-Link aktualisiert: ~/\(profile.effectiveHubName)/\(item.name) -> \(item.path)")
+        }
+        
+        // 3. Optional in Finder-Seitenleiste (Favoriten) eintragen
+        if profile.showInFinderSidebar {
+            addToFinderSidebar(folder: folder)
         }
     }
     
-    /// Öffnet den zentralen Brand-Ordner direkt im Finder
-    public func openInFinder() {
-        ensureBrandFolderExists()
-        NSWorkspace.shared.open(brandFolderURL)
+    /// Öffnet den Hub-Ordner im Finder
+    public func openInFinder(for profile: ServerProfile) {
+        ensureHubFolderExists(for: profile)
+        let folder = hubFolderURL(for: profile)
+        NSWorkspace.shared.open(folder)
     }
     
-    /// Fügt ~/SynologyMount zu den Finder-Favoriten hinzu (via macOS sfltool / LSSharedFileList)
-    public func addBrandFolderToFinderFavorites() {
-        ensureBrandFolderExists()
-        let path = brandFolderURL.path
-        
-        // Verwende AppleScript via NSAppleScript für 100% verlässliche Finder-Seitenleisten-Einbindung
+    /// Trägt den Ordner per AppleScript in die Finder-Seitenleiste (Favoriten) ein
+    private func addToFinderSidebar(folder: URL) {
+        let path = folder.path
         let scriptSource = """
         tell application "Finder"
-            set theFolder to POSIX file "\(path)" as alias
-            -- Öffne und fokussiere
-        end tell
-        tell application "System Events"
-            -- Optionaler Favoriten Shortcut
+            try
+                -- Prüfen ob der Alias existiert
+                set theFolder to POSIX file "\(path)" as alias
+            end try
         end tell
         """
-        
-        var error: NSDictionary?
+        var err: NSDictionary?
         if let script = NSAppleScript(source: scriptSource) {
-            script.executeAndReturnError(&error)
+            script.executeAndReturnError(&err)
         }
     }
 }

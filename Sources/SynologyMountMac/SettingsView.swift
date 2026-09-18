@@ -35,7 +35,7 @@ struct SettingsView: View {
                                 Image(systemName: "server.rack")
                                     .foregroundColor(profile.isEnabled ? .primary : .secondary)
                                 VStack(alignment: .leading) {
-                                    Text(profile.name)
+                                    Text(profile.effectiveHubName)
                                         .font(.system(size: 13, weight: .medium))
                                     Text(profile.cleanHost)
                                         .font(.caption2)
@@ -132,6 +132,14 @@ struct ProfileDetailEditView: View {
             Form {
                 Section(header: Text(String(localized: "lbl_server_info_section", defaultValue: "Server-Informationen"))) {
                     TextField(String(localized: "lbl_server_name", defaultValue: "Servername"), text: $profile.name)
+                    
+                    TextField("Finder-Hub Name (z.B. NAS-Home)", text: Binding(
+                        get: { profile.hubFolderName ?? "" },
+                        set: { profile.hubFolderName = $0.isEmpty ? nil : $0 }
+                    ))
+                    
+                    Toggle("In Finder-Seitenleiste anzeigen (Favoriten)", isOn: $profile.showInFinderSidebar)
+                    
                     TextField(String(localized: "lbl_server_host", defaultValue: "Host / IP"), text: $profile.host)
                     TextField(String(localized: "lbl_username", defaultValue: "Benutzername"), text: $profile.username)
                     SecureField(String(localized: "lbl_password", defaultValue: "Passwort"), text: $password)

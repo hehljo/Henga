@@ -12,19 +12,17 @@ struct MenuBarContentView: View {
         VStack(alignment: .leading, spacing: 10) {
             headerSection
             Divider()
-            sharesSection
-            Divider()
-            finderFolderSection
+            serversAndSharesSection
             Divider()
             actionsSection
         }
         .padding(14)
-        .frame(width: 340)
+        .frame(width: 360)
         .onAppear {
             store.reloadProfiles()
             Task {
                 await store.syncMounts()
-                updateFinderLinks()
+                updateAllFinderLinks()
             }
         }
     }
@@ -43,14 +41,10 @@ struct MenuBarContentView: View {
     }
     
     @ViewBuilder
-    private var sharesSection: some View {
-        let allShares = store.profiles.flatMap { p in
-            p.shares.map { (profile: p, share: $0) }
-        }
-        
-        if allShares.isEmpty {
+    private var serversAndSharesSection: some View {
+        if store.profiles.isEmpty {
             VStack(spacing: 8) {
-                Text(String(localized: "lbl_no_shares", defaultValue: "Keine Freigaben konfiguriert"))
+                Text(String(localized: "lbl_no_shares", defaultValue: "Keine Server konfiguriert"))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
@@ -63,77 +57,76 @@ struct MenuBarContentView: View {
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.vertical, 10)
         } else {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text(String(localized: "menu_shares", defaultValue: "Freigaben"))
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
-                    
-                    Text("(\(allShares.count))")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    
-                    Spacer()
-                    
-                    Button {
-                        store.reloadProfiles()
-                        Task { 
-                            await store.syncMounts()
-                            updateFinderLinks()
-                        }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.caption2)
-                    }
-                    .buttonStyle(.borderless)
-                    .help(String(localized: "menu_mount_all", defaultValue: "Alle aktualisieren / verbinden"))
-                }
-                
-                ScrollView(.vertical) {
-                    VStack(spacing: 4) {
-                        ForEach(allShares, id: \.share.id) { item in
-                            shareRow(profile: item.profile, share: item.share)
-                        }
+            ScrollView(.vertical) {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(store.profiles) { profile in
+                        serverBlock(profile: profile)
                     }
                 }
-                .frame(maxHeight: 240)
-                
-                HStack {
-                    Button(String(localized: "menu_mount_all", defaultValue: "Alle verbinden")) {
-                        mountAll()
-                    }
-                    .buttonStyle(.borderless)
-                    .font(.caption2)
-                    
-                    Spacer()
-                    
-                    Button(String(localized: "menu_unmount_all", defaultValue: "Alle trennen")) {
-                        unmountAll()
-                    }
-                    .buttonStyle(.borderless)
-                    .font(.caption2)
-                }
-                .padding(.top, 4)
             }
+            .frame(maxHeight: 320)
         }
     }
     
     @ViewBuilder
-    private var finderFolderSection: some View {
-        HStack {
-            Image(systemName: "folder.badge.gearshape")
-                .foregroundColor(.accentColor)
-            Text(AppConfig.brandName)
-                .font(.system(size: 12, weight: .medium))
-            Spacer()
-            Button(String(localized: "open_in_finder", defaultValue: "Im Finder öffnen")) {
-                FinderSidebarHelper.shared.openInFinder()
+    private func serverBlock(profile: ServerProfile) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // Header pro Server / Hub mit direktem Verbinden / Trennen
+            HStack(spacing: 6) {
+                Image(systemName: "server.rack")
+                    .foregroundColor(profile.isEnabled ? .accentColor : .secondary)
+                
+                Text(profile.effectiveHubName)
+                    .font(.system(size: 13, weight: .bold))
+                
+                Spacer()
+                
+                Button {
+                    FinderSidebarHelper.shared.openInFinder(for: profile)
+                } label: {
+                    Image(systemName: "folder")
+                }
+                .buttonStyle(.borderless)
+                .help(String(localized: "open_in_finder", defaultValue: "Im Finder öffnen"))
+                
+                Button {
+                    mountSelected(for: profile)
+                } label: {
+                    Image(systemName: "play.circle")
+                        .foregroundColor(.green)
+                }
+                .buttonStyle(.borderless)
+                .help("Ausgewählte Freigaben verbinden")
+                
+                Button {
+                    unmountAll(for: profile)
+                } label: {
+                    Image(systemName: "eject")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.borderless)
+                .help("Alle Freigaben dieses Servers trennen")
             }
-            .buttonStyle(.bordered)
-            .controlSize(.mini)
+            .padding(.horizontal, 4)
+            
+            // Liste der Shares für diesen Server
+            if profile.shares.isEmpty {
+                Text("Keine Freigaben eingerichtet.")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .padding(.leading, 8)
+            } else {
+                VStack(spacing: 4) {
+                    ForEach(profile.shares) { share in
+                        shareRow(profile: profile, share: share)
+                    }
+                }
+                .padding(.leading, 8)
+            }
         }
-        .padding(.vertical, 2)
+        .padding(8)
+        .background(Color(NSColor.controlBackgroundColor).opacity(0.4))
+        .cornerRadius(8)
     }
     
     @ViewBuilder
@@ -143,23 +136,33 @@ struct MenuBarContentView: View {
         HStack(spacing: 8) {
             Circle()
                 .fill(statusColor(status))
-                .frame(width: 8, height: 8)
+                .frame(width: 7, height: 7)
             
             VStack(alignment: .leading, spacing: 1) {
                 Text(share.name)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                 Text(share.remotePath)
-                    .font(.system(size: 10))
+                    .font(.system(size: 9))
                     .foregroundColor(.secondary)
             }
             
             Spacer()
             
+            if share.autoMount {
+                Text("Auto")
+                    .font(.system(size: 9))
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 1)
+                    .background(Color.secondary.opacity(0.15))
+                    .cornerRadius(4)
+            }
+            
             if status == .mounted {
                 Button {
                     openInFinder(share: share)
                 } label: {
-                    Image(systemName: "folder")
+                    Image(systemName: "arrow.up.forward.app")
                         .foregroundColor(.accentColor)
                 }
                 .buttonStyle(.borderless)
@@ -168,32 +171,28 @@ struct MenuBarContentView: View {
                 Button {
                     Task {
                         try? await store.unmountShare(share, from: profile)
-                        updateFinderLinks()
+                        updateAllFinderLinks()
                     }
                 } label: {
                     Image(systemName: "eject.fill")
                         .foregroundColor(.secondary)
                 }
                 .buttonStyle(.borderless)
-                .help(String(localized: "menu_unmount_all", defaultValue: "Trennen"))
             } else {
                 Button {
                     Task {
                         try? await store.mountShare(share, from: profile)
-                        updateFinderLinks()
+                        updateAllFinderLinks()
                     }
                 } label: {
                     Image(systemName: "play.circle.fill")
                         .foregroundColor(.green)
                 }
                 .buttonStyle(.borderless)
-                .help(String(localized: "menu_mount_all", defaultValue: "Verbinden"))
             }
         }
         .padding(.horizontal, 6)
-        .padding(.vertical, 4)
-        .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
-        .cornerRadius(6)
+        .padding(.vertical, 3)
     }
     
     @ViewBuilder
@@ -206,6 +205,19 @@ struct MenuBarContentView: View {
             .controlSize(.small)
             
             Spacer()
+            
+            Button {
+                store.reloadProfiles()
+                Task {
+                    await store.syncMounts()
+                    updateAllFinderLinks()
+                }
+            } label: {
+                Image(systemName: "arrow.clockwise")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .help("Aktualisieren")
             
             Button(String(localized: "menu_quit", defaultValue: "Beenden")) {
                 NSApplication.shared.terminate(nil)
@@ -234,38 +246,36 @@ struct MenuBarContentView: View {
         SettingsWindowManager.shared.showSettings(store: store)
     }
     
-    private func updateFinderLinks() {
-        var active: [(name: String, path: String)] = []
+    private func updateAllFinderLinks() {
         for profile in store.profiles {
+            var active: [(name: String, path: String)] = []
             for share in profile.shares {
                 if store.statuses[share.id]?.state == .mounted {
                     let path = MountPointSanitizer.resolveMountPoint(for: share)
                     active.append((name: share.name, path: path))
                 }
             }
-        }
-        FinderSidebarHelper.shared.updateFinderLinks(activeMountPoints: active)
-    }
-    
-    private func mountAll() {
-        Task {
-            for profile in store.profiles where profile.isEnabled {
-                for share in profile.shares {
-                    try? await store.mountShare(share, from: profile)
-                }
-            }
-            updateFinderLinks()
+            FinderSidebarHelper.shared.updateFinderLinks(for: profile, activeShares: active)
         }
     }
     
-    private func unmountAll() {
+    /// Verbindet nur die Shares, die auf "Auto" stehen (Vorauswahl)
+    private func mountSelected(for profile: ServerProfile) {
         Task {
-            for profile in store.profiles {
-                for share in profile.shares {
-                    try? await store.unmountShare(share, from: profile)
-                }
+            let targets = profile.shares.filter { $0.autoMount }
+            for share in targets {
+                try? await store.mountShare(share, from: profile)
             }
-            updateFinderLinks()
+            updateAllFinderLinks()
+        }
+    }
+    
+    private func unmountAll(for profile: ServerProfile) {
+        Task {
+            for share in profile.shares {
+                try? await store.unmountShare(share, from: profile)
+            }
+            updateAllFinderLinks()
         }
     }
 }
