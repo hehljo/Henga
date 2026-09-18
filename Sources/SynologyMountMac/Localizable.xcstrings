@@ -341,6 +341,23 @@
         }
       }
     },
+    "lbl_server_info_section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server-Informationen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server Information"
+          }
+        }
+      }
+    },
     "lbl_server_name" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -500,13 +517,47 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d Freigabe(n)"
+            "value" : "%lld Freigabe(n)"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d share(s)"
+            "value" : "%lld share(s)"
+          }
+        }
+      }
+    },
+    "lbl_no_shares" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Freigaben konfiguriert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No shares configured"
+          }
+        }
+      }
+    },
+    "lbl_select_server_placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählen Sie einen Server aus der Liste oder erstellen Sie einen neuen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a server from the list or create a new one."
           }
         }
       }

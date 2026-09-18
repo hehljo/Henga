@@ -61,7 +61,7 @@ struct SettingsView: View {
                     .foregroundColor(.secondary)
                 Text(String(localized: "settings_title", defaultValue: "SynologyMount Einstellungen"))
                     .font(.headline)
-                Text(String(localized: "btn_add_server", defaultValue: "Wählen Sie einen Server aus oder erstellen Sie einen neuen."))
+                Text(String(localized: "lbl_select_server_placeholder", defaultValue: "Wählen Sie einen Server aus der Liste oder erstellen Sie einen neuen."))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -90,7 +90,7 @@ struct ProfileDetailEditView: View {
     
     var body: some View {
         Form {
-            Section(header: Text(String(localized: "lbl_server_name", defaultValue: "Server-Informationen"))) {
+            Section(header: Text(String(localized: "lbl_server_info_section", defaultValue: "Server-Informationen"))) {
                 TextField(String(localized: "lbl_server_name", defaultValue: "Servername"), text: $profile.name)
                 TextField(String(localized: "lbl_server_host", defaultValue: "Host / IP"), text: $profile.host)
                 TextField(String(localized: "lbl_username", defaultValue: "Benutzername"), text: $profile.username)
@@ -222,7 +222,6 @@ struct ProfileDetailEditView: View {
                     self.showOtpPrompt = false
                     self.otpCode = ""
                     self.isDetectingShares = false
-                    // Profil mit neuem Token direkt sichern
                     self.onSave(self.profile)
                 }
             } catch SynoClientError.twoFactorRequired {
