@@ -1,6 +1,6 @@
 [project]
-name = "SynologyMount"
+name = "Henga"
 platform = "apple"
 
 [brand]
-source = "Sources/SynologyMountCore/Config/AppConfig.swift:brandName"
+source = "Sources/HengaCore/Config/AppConfig.swift:brandName"

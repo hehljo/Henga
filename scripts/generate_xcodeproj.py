@@ -5,8 +5,8 @@ def make_id(key: str) -> str:
     return hashlib.md5(key.encode('utf-8')).hexdigest()[:24].upper()
 
 def main():
-    root_dir = "/SynologyMount"
-    proj_dir = os.path.join(root_dir, "SynologyMount.xcodeproj")
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    proj_dir = os.path.join(root_dir, "Henga.xcodeproj")
     os.makedirs(proj_dir, exist_ok=True)
     shared_data = os.path.join(proj_dir, "xcshareddata", "xcschemes")
     os.makedirs(shared_data, exist_ok=True)
@@ -15,12 +15,12 @@ def main():
     core_files = []
     mac_files = []
     
-    for r, _, files in os.walk(os.path.join(root_dir, "Sources", "SynologyMountCore")):
+    for r, _, files in os.walk(os.path.join(root_dir, "Sources", "HengaCore")):
         for f in files:
             if f.endswith(".swift"):
                 core_files.append(os.path.relpath(os.path.join(r, f), root_dir))
                 
-    for r, _, files in os.walk(os.path.join(root_dir, "Sources", "SynologyMountMac")):
+    for r, _, files in os.walk(os.path.join(root_dir, "Sources", "HengaMac")):
         for f in files:
             if f.endswith(".swift"):
                 mac_files.append(os.path.relpath(os.path.join(r, f), root_dir))
@@ -35,10 +35,10 @@ def main():
         file_refs[fpath] = (fid, bid)
         
     res_files = [
-        "Sources/SynologyMountMac/Assets.xcassets",
-        "Sources/SynologyMountMac/Localizable.xcstrings",
-        "Sources/SynologyMountMac/Info.plist",
-        "Sources/SynologyMountMac/App.entitlements"
+        "Sources/HengaMac/Assets.xcassets",
+        "Sources/HengaMac/Localizable.xcstrings",
+        "Sources/HengaMac/Info.plist",
+        "Sources/HengaMac/App.entitlements"
     ]
     res_refs = {}
     for rpath in res_files:
@@ -46,8 +46,8 @@ def main():
         bid = make_id(f"build_file_{rpath}")
         res_refs[rpath] = (fid, bid)
 
-    TARGET_ID = make_id("target_SynologyMount")
-    PROJECT_ID = make_id("project_SynologyMount")
+    TARGET_ID = make_id("target_Henga")
+    PROJECT_ID = make_id("project_Henga")
     MAIN_GROUP_ID = make_id("main_group")
     CORE_GROUP_ID = make_id("core_group")
     MAC_GROUP_ID = make_id("mac_group")
@@ -81,7 +81,7 @@ def main():
         fid, bid = file_refs[fpath]
         fname = os.path.basename(fpath)
         lines.append(f"\t\t{bid} /* {fname} in Sources */ = {{isa = PBXBuildFile; fileRef = {fid} /* {fname} */; }};")
-    for rpath in ["Sources/SynologyMountMac/Assets.xcassets", "Sources/SynologyMountMac/Localizable.xcstrings"]:
+    for rpath in ["Sources/HengaMac/Assets.xcassets", "Sources/HengaMac/Localizable.xcstrings"]:
         fid, bid = res_refs[rpath]
         fname = os.path.basename(rpath)
         lines.append(f"\t\t{bid} /* {fname} in Resources */ = {{isa = PBXBuildFile; fileRef = {fid} /* {fname} */; }};")
@@ -89,7 +89,7 @@ def main():
     
     # PBXFileReference
     lines.append("/* Begin PBXFileReference section */")
-    lines.append(f"\t\t{PRODUCT_REF_ID} /* SynologyMount.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SynologyMount.app; sourceTree = BUILT_PRODUCTS_DIR; }};")
+    lines.append(f"\t\t{PRODUCT_REF_ID} /* Henga.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Henga.app; sourceTree = BUILT_PRODUCTS_DIR; }};")
     for fpath in all_swift_files:
         fid, _ = file_refs[fpath]
         fname = os.path.basename(fpath)
@@ -122,14 +122,14 @@ def main():
     lines.append(f"\t\t{MAIN_GROUP_ID} = {{")
     lines.append("\t\t\tisa = PBXGroup;")
     lines.append("\t\t\tchildren = (")
-    lines.append(f"\t\t\t\t{CORE_GROUP_ID} /* SynologyMountCore */,")
-    lines.append(f"\t\t\t\t{MAC_GROUP_ID} /* SynologyMountMac */,")
+    lines.append(f"\t\t\t\t{CORE_GROUP_ID} /* HengaCore */,")
+    lines.append(f"\t\t\t\t{MAC_GROUP_ID} /* HengaMac */,")
     lines.append(f"\t\t\t\t{PRODUCTS_GROUP_ID} /* Products */,")
     lines.append("\t\t\t);")
     lines.append("\t\t\tsourceTree = \"<group>\";")
     lines.append("\t\t};")
     
-    lines.append(f"\t\t{CORE_GROUP_ID} /* SynologyMountCore */ = {{")
+    lines.append(f"\t\t{CORE_GROUP_ID} /* HengaCore */ = {{")
     lines.append("\t\t\tisa = PBXGroup;")
     lines.append("\t\t\tchildren = (")
     for fpath in sorted(core_files):
@@ -137,11 +137,11 @@ def main():
         fname = os.path.basename(fpath)
         lines.append(f"\t\t\t\t{fid} /* {fname} */,")
     lines.append("\t\t\t);")
-    lines.append("\t\t\tname = SynologyMountCore;")
+    lines.append("\t\t\tname = HengaCore;")
     lines.append("\t\t\tsourceTree = \"<group>\";")
     lines.append("\t\t};")
     
-    lines.append(f"\t\t{MAC_GROUP_ID} /* SynologyMountMac */ = {{")
+    lines.append(f"\t\t{MAC_GROUP_ID} /* HengaMac */ = {{")
     lines.append("\t\t\tisa = PBXGroup;")
     lines.append("\t\t\tchildren = (")
     for fpath in sorted(mac_files):
@@ -153,14 +153,14 @@ def main():
         fname = os.path.basename(rpath)
         lines.append(f"\t\t\t\t{fid} /* {fname} */,")
     lines.append("\t\t\t);")
-    lines.append("\t\t\tname = SynologyMountMac;")
+    lines.append("\t\t\tname = HengaMac;")
     lines.append("\t\t\tsourceTree = \"<group>\";")
     lines.append("\t\t};")
     
     lines.append(f"\t\t{PRODUCTS_GROUP_ID} /* Products */ = {{")
     lines.append("\t\t\tisa = PBXGroup;")
     lines.append("\t\t\tchildren = (")
-    lines.append(f"\t\t\t\t{PRODUCT_REF_ID} /* SynologyMount.app */,")
+    lines.append(f"\t\t\t\t{PRODUCT_REF_ID} /* Henga.app */,")
     lines.append("\t\t\t);")
     lines.append("\t\t\tname = Products;")
     lines.append("\t\t\tsourceTree = \"<group>\";")
@@ -168,10 +168,9 @@ def main():
     lines.append("/* End PBXGroup section */")
     
     # PBXNativeTarget section
-    lines.append("/* Begin PBXNativeTarget section */")
-    lines.append(f"\t\t{TARGET_ID} /* SynologyMount */ = {{")
+    lines.append(f"\t\t{TARGET_ID} /* Henga */ = {{")
     lines.append("\t\t\tisa = PBXNativeTarget;")
-    lines.append(f"\t\t\tbuildConfigurationList = {TARGET_CONFIG_LIST_ID} /* Build configuration list for PBXNativeTarget \"SynologyMount\" */;")
+    lines.append(f"\t\t\tbuildConfigurationList = {TARGET_CONFIG_LIST_ID} /* Build configuration list for PBXNativeTarget \"Henga\" */;")
     lines.append("\t\t\tbuildPhases = (")
     lines.append(f"\t\t\t\t{SOURCES_PHASE_ID} /* Sources */,")
     lines.append(f"\t\t\t\t{FRAMEWORKS_PHASE_ID} /* Frameworks */,")
@@ -181,9 +180,9 @@ def main():
     lines.append("\t\t\t);")
     lines.append("\t\t\tdependencies = (")
     lines.append("\t\t\t);")
-    lines.append("\t\t\tname = SynologyMount;")
-    lines.append("\t\t\tproductName = SynologyMount;")
-    lines.append(f"\t\t\tproductReference = {PRODUCT_REF_ID} /* SynologyMount.app */;")
+    lines.append("\t\t\tname = Henga;")
+    lines.append("\t\t\tproductName = Henga;")
+    lines.append(f"\t\t\tproductReference = {PRODUCT_REF_ID} /* Henga.app */;")
     lines.append("\t\t\tproductType = \"com.apple.product-type.application\";")
     lines.append("\t\t};")
     lines.append("/* End PBXNativeTarget section */")
@@ -201,7 +200,7 @@ def main():
     lines.append("\t\t\t\t\t};")
     lines.append("\t\t\t\t};")
     lines.append("\t\t\t};")
-    lines.append(f"\t\t\tbuildConfigurationList = {PROJ_CONFIG_LIST_ID} /* Build configuration list for PBXProject \"SynologyMount\" */;")
+    lines.append(f"\t\t\tbuildConfigurationList = {PROJ_CONFIG_LIST_ID} /* Build configuration list for PBXProject \"Henga\" */;")
     lines.append("\t\t\tcompatibilityVersion = \"Xcode 14.0\";")
     lines.append("\t\t\tdevelopmentRegion = de;")
     lines.append("\t\t\thasScannedForEncodings = 0;")
@@ -214,7 +213,7 @@ def main():
     lines.append("\t\t\tprojectDirPath = \"\";")
     lines.append("\t\t\tprojectRoot = \"\";")
     lines.append("\t\t\ttargets = (")
-    lines.append(f"\t\t\t\t{TARGET_ID} /* SynologyMount */,")
+    lines.append(f"\t\t\t\t{TARGET_ID} /* Henga */,")
     lines.append("\t\t\t);")
     lines.append("\t\t};")
     lines.append("/* End PBXProject section */")
@@ -225,7 +224,7 @@ def main():
     lines.append("\t\t\tisa = PBXResourcesBuildPhase;")
     lines.append("\t\t\tbuildActionMask = 2147483647;")
     lines.append("\t\t\tfiles = (")
-    for rpath in ["Sources/SynologyMountMac/Assets.xcassets", "Sources/SynologyMountMac/Localizable.xcstrings"]:
+    for rpath in ["Sources/HengaMac/Assets.xcassets", "Sources/HengaMac/Localizable.xcstrings"]:
         _, bid = res_refs[rpath]
         fname = os.path.basename(rpath)
         lines.append(f"\t\t\t\t{bid} /* {fname} in Resources */,")
@@ -296,20 +295,20 @@ def main():
         lines.append("\t\t\tisa = XCBuildConfiguration;")
         lines.append("\t\t\tbuildSettings = {")
         lines.append("\t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;")
-        lines.append("\t\t\t\tCODE_SIGN_ENTITLEMENTS = \"Sources/SynologyMountMac/App.entitlements\";")
+        lines.append("\t\t\t\tCODE_SIGN_ENTITLEMENTS = \"Sources/HengaMac/App.entitlements\";")
         lines.append("\t\t\t\tCODE_SIGN_IDENTITY = \"-\";")
         lines.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
         lines.append("\t\t\t\tCOMBINE_HIDPI_IMAGES = YES;")
         lines.append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;")
         lines.append("\t\t\t\tENABLE_HARDENED_RUNTIME = YES;")
         lines.append("\t\t\t\tGENERATE_INFOPLIST_FILE = NO;")
-        lines.append("\t\t\t\tINFOPLIST_FILE = \"Sources/SynologyMountMac/Info.plist\";")
+        lines.append("\t\t\t\tINFOPLIST_FILE = \"Sources/HengaMac/Info.plist\";")
         lines.append("\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (")
         lines.append("\t\t\t\t\t\"$(inherited)\",")
         lines.append("\t\t\t\t\t\"@executable_path/../Frameworks\",")
         lines.append("\t\t\t\t);")
         lines.append("\t\t\t\tMARKETING_VERSION = 1.0;")
-        lines.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.hehljo.SynologyMount;")
+        lines.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.hehljo.Henga;")
         lines.append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
         lines.append("\t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;")
         lines.append("\t\t\t\tSWIFT_VERSION = 5.0;")
@@ -320,7 +319,7 @@ def main():
     
     # XCConfigurationList section
     lines.append("/* Begin XCConfigurationList section */")
-    lines.append(f"\t\t{PROJ_CONFIG_LIST_ID} /* Build configuration list for PBXProject \"SynologyMount\" */ = {{")
+    lines.append(f"\t\t{PROJ_CONFIG_LIST_ID} /* Build configuration list for PBXProject \"Henga\" */ = {{")
     lines.append("\t\t\tisa = XCConfigurationList;")
     lines.append("\t\t\tbuildConfigurations = (")
     lines.append(f"\t\t\t\t{PROJ_DEBUG_CONFIG_ID} /* Debug */,")
@@ -330,7 +329,7 @@ def main():
     lines.append("\t\t\tdefaultConfigurationName = Release;")
     lines.append("\t\t};")
     
-    lines.append(f"\t\t{TARGET_CONFIG_LIST_ID} /* Build configuration list for PBXNativeTarget \"SynologyMount\" */ = {{")
+    lines.append(f"\t\t{TARGET_CONFIG_LIST_ID} /* Build configuration list for PBXNativeTarget \"Henga\" */ = {{")
     lines.append("\t\t\tisa = XCConfigurationList;")
     lines.append("\t\t\tbuildConfigurations = (")
     lines.append(f"\t\t\t\t{TARGET_DEBUG_CONFIG_ID} /* Debug */,")

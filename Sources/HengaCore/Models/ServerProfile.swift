@@ -30,7 +30,7 @@ public struct ServerProfile: Identifiable, Codable, Equatable, Sendable {
         isEnabled: Bool = true,
         wakeOnLanMAC: String? = nil,
         deviceID: String? = nil,
-        deviceName: String = "SynologyMount Mac"
+        deviceName: String = "Henga Mac"
     ) {
         self.id = id
         self.name = name.trimmingCharacters(in: .whitespacesAndNewlines)

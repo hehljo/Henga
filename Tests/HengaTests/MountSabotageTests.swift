@@ -1,8 +1,8 @@
 import Testing
 import Foundation
-@testable import SynologyMountCore
+@testable import HengaCore
 
-@Suite("Adversarial & Sabotage Tests for SynologyMount (Mutation & Resiliency)")
+@Suite("Adversarial & Sabotage Tests for Henga (Mutation & Resiliency)")
 struct MountSabotageTests {
     
     @Test("Sabotage: Malformed DSM API JSON must safely fail decoding without crash")
@@ -59,7 +59,7 @@ struct MountSabotageTests {
         let maliciousShare = ShareMount(name: "Evil", remotePath: "../../../etc/passwd")
         let sanitized = MountPointSanitizer.resolveMountPoint(for: maliciousShare)
         #expect(!sanitized.contains("etc/passwd"))
-        #expect(sanitized.contains("SynologyMount/Mounts"))
+        #expect(sanitized.contains("Henga/Mounts"))
     }
     
     @Test("Sabotage: Orphaned directory check protects non-empty folders")

@@ -2,51 +2,53 @@
 import PackageDescription
 
 let package = Package(
-    name: "SynologyMount",
+    name: "Henga",
     defaultLocalization: "de",
     platforms: [
         .macOS(.v14)
     ],
     products: [
         .library(
-            name: "SynologyMountCore",
-            targets: ["SynologyMountCore"]
+            name: "HengaCore",
+            targets: ["HengaCore"]
         ),
         .executable(
-            name: "SynologyMountMac",
-            targets: ["SynologyMountMac"]
+            name: "HengaMac",
+            targets: ["HengaMac"]
         ),
         .executable(
-            name: "syno-mount-cli",
-            targets: ["SynologyMountCLI"]
+            name: "henga-cli",
+            targets: ["HengaCLI"]
         )
     ],
-    dependencies: [],
     targets: [
         .target(
-            name: "SynologyMountCore",
+            name: "HengaCore",
             dependencies: [],
-            path: "Sources/SynologyMountCore"
+            path: "Sources/HengaCore"
         ),
         .executableTarget(
-            name: "SynologyMountMac",
-            dependencies: ["SynologyMountCore"],
-            path: "Sources/SynologyMountMac",
-            exclude: ["App.entitlements", "Info.plist"],
+            name: "HengaMac",
+            dependencies: ["HengaCore"],
+            path: "Sources/HengaMac",
+            exclude: [
+                "Info.plist",
+                "App.entitlements"
+            ],
             resources: [
                 .process("Assets.xcassets"),
                 .process("Localizable.xcstrings")
             ]
         ),
         .executableTarget(
-            name: "SynologyMountCLI",
-            dependencies: ["SynologyMountCore"],
-            path: "Sources/SynologyMountCLI"
+            name: "HengaCLI",
+            dependencies: ["HengaCore"],
+            path: "Sources/HengaCLI"
         ),
         .testTarget(
-            name: "SynologyMountTests",
-            dependencies: ["SynologyMountCore"],
-            path: "Tests/SynologyMountTests"
+            name: "HengaTests",
+            dependencies: ["HengaCore"],
+            path: "Tests/HengaTests"
         )
     ]
 )

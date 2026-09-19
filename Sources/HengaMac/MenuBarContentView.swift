@@ -1,8 +1,8 @@
 #if canImport(AppKit) && canImport(SwiftUI)
 import SwiftUI
 import AppKit
-#if canImport(SynologyMountCore)
-import SynologyMountCore
+#if canImport(HengaCore)
+import HengaCore
 #endif
 
 struct MenuBarContentView: View {
@@ -163,7 +163,7 @@ struct MenuBarContentView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
-            .help("SynologyMount beenden")
+            .help("Henga beenden")
         }
     }
     

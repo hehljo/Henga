@@ -1,10 +1,10 @@
 import Foundation
-#if canImport(SynologyMountCore)
-import SynologyMountCore
+#if canImport(HengaCore)
+import HengaCore
 #endif
 
 @main
-struct SynologyMountCLI {
+struct HengaCLI {
     static func main() async {
         print("--- \(AppConfig.brandName) CLI (v\(AppConfig.appVersion)) ---")
         

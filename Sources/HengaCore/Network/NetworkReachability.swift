@@ -8,7 +8,7 @@ public final class NetworkReachability: @unchecked Sendable {
     
     #if canImport(Network)
     private var pathMonitor: NWPathMonitor?
-    private let monitorQueue = DispatchQueue(label: "com.hehljo.SynologyMount.reachability")
+    private let monitorQueue = DispatchQueue(label: "com.hehljo.Henga.reachability")
     #endif
     
     private let lock = NSLock()
@@ -56,12 +56,12 @@ public final class NetworkReachability: @unchecked Sendable {
         if port == 445 {
             let webHttps = await testSocket(host: clean, port: 5001, timeoutSeconds: 1.5)
             if webHttps {
-                print("[SynologyMount] ℹ️ DSM Port 5001 antwortet (NAS ist online), fahre mit Mount fort...")
+                print("[Henga] ℹ️ DSM Port 5001 antwortet (NAS ist online), fahre mit Mount fort...")
                 return true
             }
             let webHttp = await testSocket(host: clean, port: 5000, timeoutSeconds: 1.5)
             if webHttp {
-                print("[SynologyMount] ℹ️ DSM Port 5000 antwortet (NAS ist online), fahre mit Mount fort...")
+                print("[Henga] ℹ️ DSM Port 5000 antwortet (NAS ist online), fahre mit Mount fort...")
                 return true
             }
         }

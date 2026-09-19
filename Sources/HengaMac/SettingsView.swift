@@ -1,8 +1,8 @@
 #if canImport(AppKit) && canImport(SwiftUI)
 import SwiftUI
 import AppKit
-#if canImport(SynologyMountCore)
-import SynologyMountCore
+#if canImport(HengaCore)
+import HengaCore
 #endif
 
 struct SettingsView: View {
@@ -92,7 +92,7 @@ struct SettingsView: View {
                     .font(.system(size: 56))
                     .foregroundColor(.accentColor)
                 
-                Text(String(localized: "settings_title", defaultValue: "SynologyMount Einstellungen"))
+                Text(String(localized: "settings_title", defaultValue: "Henga Einstellungen"))
                     .font(.title2)
                     .fontWeight(.bold)
                 

@@ -27,12 +27,12 @@ public final class MountAppStore: @unchecked Sendable {
     
     public func reloadProfiles() {
         let loaded = profileManager.getProfiles()
-        print("[SynologyMount] 📂 Lade Profile neu: \(loaded.count) Profil(e), Shares: \(loaded.flatMap { $0.shares }.map { $0.name })")
+        print("[Henga] 📂 Lade Profile neu: \(loaded.count) Profil(e), Shares: \(loaded.flatMap { $0.shares }.map { $0.name })")
         self.profiles = loaded
     }
     
     public func saveProfile(_ profile: ServerProfile) {
-        print("[SynologyMount] 💾 Speichere Profil '\(profile.name)' mit \(profile.shares.count) Freigaben...")
+        print("[Henga] 💾 Speichere Profil '\(profile.name)' mit \(profile.shares.count) Freigaben...")
         profileManager.addOrUpdateProfile(profile)
         reloadProfiles()
         Task {
@@ -53,7 +53,7 @@ public final class MountAppStore: @unchecked Sendable {
             self.isSyncing = false
         }
         
-        print("[SynologyMount] 🔄 Starte syncMounts für \(profiles.count) Profile...")
+        print("[Henga] 🔄 Starte syncMounts für \(profiles.count) Profile...")
         await mountManager.runAutoMountCycle(profiles: profiles)
         let all = await mountManager.getAllStatuses()
         let online = reachability.isConnected
@@ -67,15 +67,15 @@ public final class MountAppStore: @unchecked Sendable {
     }
     
     public func mountShare(_ share: ShareMount, from profile: ServerProfile) async throws {
-        print("[SynologyMount] 🚀 Mount-Anforderung für '\(share.name)' (\(share.remotePath))...")
+        print("[Henga] 🚀 Mount-Anforderung für '\(share.name)' (\(share.remotePath))...")
         do {
             try await mountManager.mount(share: share, profile: profile)
             if let st = await mountManager.getStatus(for: share.id) {
                 self.statuses[share.id] = st
             }
-            print("[SynologyMount] ✅ Mount erfolgreich für '\(share.name)'!")
+            print("[Henga] ✅ Mount erfolgreich für '\(share.name)'!")
         } catch {
-            print("[SynologyMount] ❌ Mount fehlgeschlagen für '\(share.name)': \(error.localizedDescription)")
+            print("[Henga] ❌ Mount fehlgeschlagen für '\(share.name)': \(error.localizedDescription)")
             if let st = await mountManager.getStatus(for: share.id) {
                 self.statuses[share.id] = st
             }
@@ -84,7 +84,7 @@ public final class MountAppStore: @unchecked Sendable {
     }
     
     public func unmountShare(_ share: ShareMount, from profile: ServerProfile) async throws {
-        print("[SynologyMount] ⏹ Unmount-Anforderung für '\(share.name)'...")
+        print("[Henga] ⏹ Unmount-Anforderung für '\(share.name)'...")
         try await mountManager.unmount(share: share, profileId: profile.id)
         if let st = await mountManager.getStatus(for: share.id) {
             self.statuses[share.id] = st

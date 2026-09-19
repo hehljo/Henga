@@ -1,6 +1,6 @@
 import Foundation
-#if canImport(SynologyMountCore)
-import SynologyMountCore
+#if canImport(HengaCore)
+import HengaCore
 #endif
 
 #if canImport(AppKit) && canImport(SwiftUI)
@@ -25,7 +25,7 @@ public final class SettingsWindowManager: NSObject, NSWindowDelegate {
         let hostingController = NSHostingController(rootView: settingsView)
         
         let win = NSWindow(contentViewController: hostingController)
-        win.title = "SynologyMount Einstellungen"
+        win.title = "Henga Einstellungen"
         win.setContentSize(NSSize(width: 760, height: 540))
         win.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         win.isReleasedWhenClosed = false
@@ -45,7 +45,7 @@ public final class SettingsWindowManager: NSObject, NSWindowDelegate {
 }
 
 @main
-struct SynologyMountApp: App {
+struct HengaApp: App {
     @State private var store = MountAppStore()
     
     var body: some Scene {
@@ -75,7 +75,7 @@ struct SynologyMountApp: App {
 }
 #else
 @main
-struct SynologyMountAppStub {
+struct HengaAppStub {
     static func main() {
         print("\(AppConfig.brandName) Mac App Target (Linux-Build/CLI Stub)")
     }

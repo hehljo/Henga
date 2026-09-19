@@ -29,7 +29,7 @@ public final class LaunchAtLoginHelper: @unchecked Sendable {
                 }
                 return true
             } catch {
-                print("[SynologyMount] ⚠️ Fehler beim Ändern des Autostart-Status: \(error.localizedDescription)")
+                print("[Henga] ⚠️ Fehler beim Ändern des Autostart-Status: \(error.localizedDescription)")
                 return false
             }
         }

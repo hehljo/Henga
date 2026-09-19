@@ -1,8 +1,8 @@
 import Testing
 import Foundation
-@testable import SynologyMountCore
+@testable import HengaCore
 
-@Suite("SynologyMount Core Domain Tests")
+@Suite("Henga Core Domain Tests")
 struct CoreDomainTests {
     
     @Test("ServerProfile host cleaning handles smb, https and port prefixes")
@@ -37,7 +37,7 @@ struct CoreDomainTests {
         let share = ShareMount(name: "My Photos", remotePath: "photos:2026")
         let path = MountPointSanitizer.resolveMountPoint(for: share)
         #expect(path.hasSuffix("My Photos"))
-        #expect(path.contains("SynologyMount/Mounts"))
+        #expect(path.contains("Henga/Mounts"))
     }
     
     @Test("Mount output parser extracts smbfs mounts accurately")

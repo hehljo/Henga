@@ -30,7 +30,7 @@ public actor MountManager {
     /// Synchronisiert die internen Status mit den tatsächlichen OS-Mounts
     public func refreshMountStatuses(profiles: [ServerProfile]) async {
         let activeMounts = await executor.listMountedVolumes()
-        print("[SynologyMount] 🔍 Aktive System-Mounts gefunden (\(activeMounts.count)): \(activeMounts.map { "\($0.mountPoint) (\($0.fileSystemType))" })")
+        print("[Henga] 🔍 Aktive System-Mounts gefunden (\(activeMounts.count)): \(activeMounts.map { "\($0.mountPoint) (\($0.fileSystemType))" })")
         
         for profile in profiles {
             for share in profile.shares {
@@ -64,7 +64,7 @@ public actor MountManager {
     /// Mountet eine bestimmte Freigabe
     public func mount(share: ShareMount, profile: ServerProfile, password: String? = nil) async throws {
         guard let url = profile.smbURL(for: share) else {
-            print("[SynologyMount] ❌ Ungültige SMB-URL für '\(share.name)': Host oder Pfad leer")
+            print("[Henga] ❌ Ungültige SMB-URL für '\(share.name)': Host oder Pfad leer")
             throw SynoClientError.invalidHost
         }
         
@@ -73,7 +73,7 @@ public actor MountManager {
         
         // 1. Bereits am Ziel gemountet?
         if let existing = activeMounts.first(where: { $0.mountPoint == targetPath || $0.matches(shareName: share.cleanRemotePath) }) {
-            print("[SynologyMount] ℹ️ Freigabe '\(share.name)' ist bereits unter \(existing.mountPoint) gemountet.")
+            print("[Henga] ℹ️ Freigabe '\(share.name)' ist bereits unter \(existing.mountPoint) gemountet.")
             var status = statuses[share.id] ?? ShareRuntimeStatus(share: share, profileId: profile.id, state: .mounted, mountPoint: existing.mountPoint)
             status.state = .mounted
             status.mountPoint = existing.mountPoint
@@ -94,7 +94,7 @@ public actor MountManager {
         // 4. Passwort ermitteln (übergeben oder aus Keychain)
         let pw = password ?? keychain.getPassword(for: profile.username)
         if pw == nil || pw?.isEmpty == true {
-            print("[SynologyMount] ⚠️ Kein Passwort im Keychain für User '\(profile.username)' hinterlegt.")
+            print("[Henga] ⚠️ Kein Passwort im Keychain für User '\(profile.username)' hinterlegt.")
         }
         
         do {
@@ -165,12 +165,12 @@ public actor MountManager {
             
             // Prüfen ob Host im Netzwerk antwortet (Port 445 oder DSM Port)
             let isSmbReachable = await reachability.checkHostReachable(host: profile.cleanHost, port: profile.smbPort)
-            print("[SynologyMount] 🌐 Host \(profile.cleanHost):\(profile.smbPort) SMB-Port-Check: \(isSmbReachable ? "OFFEN ✅" : "BLOCKIERT/OFFLINE ❌")")
+            print("[Henga] 🌐 Host \(profile.cleanHost):\(profile.smbPort) SMB-Port-Check: \(isSmbReachable ? "OFFEN ✅" : "BLOCKIERT/OFFLINE ❌")")
             
             for share in autoShares {
                 let current = statuses[share.id]?.state ?? .disconnected
                 if current == .disconnected || current == .error {
-                    print("[SynologyMount] 🔄 Versuche Auto-Mount für '\(share.name)'...")
+                    print("[Henga] 🔄 Versuche Auto-Mount für '\(share.name)'...")
                     try? await mount(share: share, profile: profile)
                 }
             }

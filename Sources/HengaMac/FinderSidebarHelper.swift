@@ -47,7 +47,7 @@ public final class FinderSidebarHelper: @unchecked Sendable {
         for item in activeShares {
             let linkURL = folder.appendingPathComponent(item.name)
             try? fm.createSymbolicLink(at: linkURL, withDestinationURL: URL(fileURLWithPath: item.path))
-            print("[SynologyMount] 🔗 Finder-Link aktualisiert: ~/\(profile.effectiveHubName)/\(item.name) -> \(item.path)")
+            print("[Henga] 🔗 Finder-Link aktualisiert: ~/\(profile.effectiveHubName)/\(item.name) -> \(item.path)")
         }
         
         // 3. Optional in Finder-Seitenleiste (Favoriten) eintragen

@@ -2,7 +2,7 @@ import Foundation
 
 public final class MountPointSanitizer: @unchecked Sendable {
     
-    /// Ermittelt den Ziel-Mountpoint im Benutzerverzeichnis (unter ~/Library/Caches/SynologyMount/Mounts/)
+    /// Ermittelt den Ziel-Mountpoint im Benutzerverzeichnis (unter ~/Library/Caches/Henga/Mounts/)
     /// Dadurch entfällt das /Volumes/-Root-Rechteproblem UND die Systemübersicht bleibt 100% sauber!
     public static func resolveMountPoint(for share: ShareMount, defaultRoot: String? = nil) -> String {
         if let custom = share.customLocalMountPoint, !custom.isEmpty {
@@ -17,7 +17,7 @@ public final class MountPointSanitizer: @unchecked Sendable {
         
         // Isoliertes Verzeichnis im User-Home
         let home = FileManager.default.homeDirectoryForCurrentUser
-        let isolatedMounts = home.appendingPathComponent("Library/Application Support/SynologyMount/Mounts", isDirectory: true)
+        let isolatedMounts = home.appendingPathComponent("Library/Application Support/Henga/Mounts", isDirectory: true)
         return isolatedMounts.appendingPathComponent(safeName).path
     }
     
@@ -54,7 +54,7 @@ public final class MountPointSanitizer: @unchecked Sendable {
     public static func cleanupOrphanedMountPointIfNeeded(at path: String, activeMounts: [ActiveMountInfo]) {
         if isOrphanedDirectory(at: path, activeMounts: activeMounts) {
             try? FileManager.default.removeItem(atPath: path)
-            print("[SynologyMount] 🧹 Verwaister toter Mountpoint entfernt: \(path)")
+            print("[Henga] 🧹 Verwaister toter Mountpoint entfernt: \(path)")
         }
     }
 }

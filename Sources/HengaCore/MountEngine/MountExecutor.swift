@@ -46,7 +46,7 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
             let output = String(data: data, encoding: .utf8) ?? ""
             return DefaultMountExecutor.parseMountOutput(output)
         } catch {
-            print("[SynologyMount] ⚠️ Fehler beim Ausführen von /sbin/mount: \(error.localizedDescription)")
+            print("[Henga] ⚠️ Fehler beim Ausführen von /sbin/mount: \(error.localizedDescription)")
             return []
         }
     }
@@ -106,7 +106,7 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
         
         let smbSource = "//\(userPart)@\(host)/\(share)"
         let safeLogSource = "//\(username):***@\(host)/\(share)"
-        print("[SynologyMount] ⚙️ Führe unsichtbaren Mount aus (-o nobrowse): \(safeLogSource) -> \(mountPoint)")
+        print("[Henga] ⚙️ Führe unsichtbaren Mount aus (-o nobrowse): \(safeLogSource) -> \(mountPoint)")
         
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/sbin/mount_smbfs")
@@ -121,7 +121,7 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
             try process.run()
             process.waitUntilExit()
         } catch {
-            print("[SynologyMount] ❌ mount_smbfs Prozessfehler: \(error.localizedDescription)")
+            print("[Henga] ❌ mount_smbfs Prozessfehler: \(error.localizedDescription)")
             throw error
         }
         
@@ -129,17 +129,17 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
             let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
             let errMsg = String(data: errData, encoding: .utf8) ?? "Unbekannter Fehler"
             let trimmedMsg = errMsg.trimmingCharacters(in: .whitespacesAndNewlines)
-            print("[SynologyMount] ❌ mount_smbfs fehlgeschlagen (Code \(process.terminationStatus)): \(trimmedMsg)")
+            print("[Henga] ❌ mount_smbfs fehlgeschlagen (Code \(process.terminationStatus)): \(trimmedMsg)")
             try? fm.removeItem(atPath: mountPoint)
             throw SynoClientError.networkError("Mount fehlgeschlagen (Code \(process.terminationStatus)): \(trimmedMsg)")
         } else {
-            print("[SynologyMount] 🎉 Unsichtbarer Mount (-o nobrowse) erfolgreich: \(mountPoint) (Systemübersicht ist 100% frei!)")
+            print("[Henga] 🎉 Unsichtbarer Mount (-o nobrowse) erfolgreich: \(mountPoint) (Systemübersicht ist 100% frei!)")
         }
     }
     
     /// Hängt Volume via `/sbin/umount` aus
     public func unmountVolume(mountPoint: String, force: Bool = false) async throws {
-        print("[SynologyMount] ⚙️ Führe /sbin/umount aus für: \(mountPoint) (Force: \(force))")
+        print("[Henga] ⚙️ Führe /sbin/umount aus für: \(mountPoint) (Force: \(force))")
         
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/sbin/umount")
@@ -155,14 +155,14 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
         if process.terminationStatus != 0 {
             let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
             let errMsg = String(data: errData, encoding: .utf8) ?? "Fehler beim Aushängen"
-            print("[SynologyMount] ❌ umount Fehler: \(errMsg)")
+            print("[Henga] ❌ umount Fehler: \(errMsg)")
             throw SynoClientError.networkError("umount fehlgeschlagen: \(errMsg)")
         }
         
         let fm = FileManager.default
         if let contents = try? fm.contentsOfDirectory(atPath: mountPoint), contents.isEmpty {
             try? fm.removeItem(atPath: mountPoint)
-            print("[SynologyMount] 🧹 Leeren Mountpoint entfernt: \(mountPoint)")
+            print("[Henga] 🧹 Leeren Mountpoint entfernt: \(mountPoint)")
         }
     }
 }
