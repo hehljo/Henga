@@ -54,9 +54,14 @@ struct HengaApp: App {
                 .environment(store)
         } label: {
             HStack(spacing: 4) {
-                // Lädt primär das Custom SVG Asset "MenuBarIcon", falls vorhanden
-                Image("MenuBarIcon", bundle: .main)
-                    .renderingMode(.template)
+                // Lädt primär das Custom Template-Asset "MenuBarIcon" mit Fallback auf SF-Symbol
+                if let nsImage = NSImage(named: "MenuBarIcon") {
+                    Image(nsImage: nsImage)
+                        .renderingMode(.template)
+                } else {
+                    Image(systemName: "link")
+                        .renderingMode(.template)
+                }
             }
         }
         .menuBarExtraStyle(.window)
