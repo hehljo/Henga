@@ -8,39 +8,39 @@ import SwiftUI
 import AppKit
 
 @MainActor
-public final class SettingsWindowManager: NSObject, NSWindowDelegate {
+public final class SettingsWindowManager: ObservableObject {
     public static let shared = SettingsWindowManager()
     
-    private var window: NSWindow?
+    private var windowController: NSWindowController?
     
     public func showSettings(store: MountAppStore) {
-        if let existing = window, existing.isVisible {
+        if let wc = windowController, let window = wc.window {
             NSApp.activate(ignoringOtherApps: true)
-            existing.makeKeyAndOrderFront(nil)
-            existing.orderFrontRegardless()
+            window.makeKeyAndOrderFront(nil)
+            window.orderFrontRegardless()
             return
         }
         
         let settingsView = SettingsView().environment(store)
         let hostingController = NSHostingController(rootView: settingsView)
         
-        let win = NSWindow(contentViewController: hostingController)
-        win.title = "Henga Einstellungen"
-        win.setContentSize(NSSize(width: 760, height: 540))
-        win.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-        win.isReleasedWhenClosed = false
-        win.delegate = self
+        let win = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 750, height: 520),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
         win.center()
+        win.title = "\(AppConfig.brandName) Einstellungen"
+        win.contentViewController = hostingController
+        win.isReleasedWhenClosed = false
         
-        self.window = win
+        let wc = NSWindowController(window: win)
+        self.windowController = wc
         
         NSApp.activate(ignoringOtherApps: true)
         win.makeKeyAndOrderFront(nil)
         win.orderFrontRegardless()
-    }
-    
-    public func windowWillClose(_ notification: Notification) {
-        // Fenster behalten für schnelles Wiederöffnen
     }
 }
 
@@ -54,23 +54,12 @@ struct HengaApp: App {
                 .environment(store)
         } label: {
             HStack(spacing: 4) {
-                Image(systemName: menuBarIconName)
+                // Lädt primär das Custom SVG Asset "MenuBarIcon", falls vorhanden
+                Image("MenuBarIcon", bundle: .main)
+                    .renderingMode(.template)
             }
         }
         .menuBarExtraStyle(.window)
-    }
-    
-    private var menuBarIconName: String {
-        let mountedCount = store.statuses.values.filter { $0.state == .mounted }.count
-        let errorCount = store.statuses.values.filter { $0.state == .error }.count
-        
-        if errorCount > 0 {
-            return "externaldrive.badge.xmark"
-        } else if mountedCount > 0 {
-            return "externaldrive.badge.checkmark"
-        } else {
-            return "externaldrive"
-        }
     }
 }
 #else
