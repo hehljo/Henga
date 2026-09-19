@@ -3,8 +3,8 @@
 DerivedData/
 *.xcodeproj
 *.xcworkspace
-!SynologyMount.xcodeproj
-!SynologyMount.xcworkspace
+!Henga.xcodeproj
+!Henga.xcworkspace
 
 # macOS
 .DS_Store
