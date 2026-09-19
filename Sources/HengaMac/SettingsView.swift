@@ -138,9 +138,8 @@ struct ProfileDetailEditView: View {
     @State private var showSavedNotice = false
     
     var body: some View {
-        ScrollView(.vertical) {
-            Form {
-                Section(header: Text(String(localized: "lbl_server_info_section", defaultValue: "Server-Informationen"))) {
+        Form {
+            Section(header: Text(String(localized: "lbl_server_info_section", defaultValue: "Server-Informationen"))) {
                     TextField(String(localized: "lbl_server_name", defaultValue: "Servername"), text: $profile.name)
                     
                     TextField("Finder-Hub Name (z.B. NAS-Home)", text: Binding(
@@ -283,8 +282,10 @@ struct ProfileDetailEditView: View {
                     }
                 }
             }
-            .padding(16)
-        }
+            .formStyle(.grouped)
+            .padding(.top, 12)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
         .onAppear {
             if let savedPw = KeychainHelper.shared.getPassword(for: profile.username) {
                 self.password = savedPw
