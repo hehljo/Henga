@@ -56,7 +56,7 @@ public struct ShareMount: Identifiable, Codable, Equatable, Sendable {
         id: UUID = UUID(),
         name: String,
         remotePath: String,
-        autoMount: Bool = true,
+        autoMount: Bool = false,
         customLocalMountPoint: String? = nil
     ) {
         self.id = id

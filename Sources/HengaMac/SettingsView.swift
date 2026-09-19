@@ -217,7 +217,7 @@ struct ProfileDetailEditView: View {
                     
                     HStack {
                         Button(String(localized: "btn_add_share", defaultValue: "Freigabe manuell hinzufügen")) {
-                            profile.shares.append(ShareMount(name: "Neue Freigabe", remotePath: "share"))
+                            profile.shares.append(ShareMount(name: "Neue Freigabe", remotePath: "share", autoMount: false))
                         }
                         
                         Spacer()
@@ -319,7 +319,7 @@ struct ProfileDetailEditView: View {
                 await MainActor.run {
                     for f in folders {
                         if !profile.shares.contains(where: { $0.cleanRemotePath.lowercased() == f.shareName.lowercased() }) {
-                            profile.shares.append(ShareMount(name: f.name, remotePath: f.shareName, autoMount: true))
+                            profile.shares.append(ShareMount(name: f.name, remotePath: f.shareName, autoMount: false))
                         }
                     }
                     self.showOtpPrompt = false
