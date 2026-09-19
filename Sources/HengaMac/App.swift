@@ -26,12 +26,15 @@ public final class SettingsWindowManager: ObservableObject {
         
         let win = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 750, height: 520),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
         win.center()
         win.title = "\(AppConfig.brandName) Einstellungen"
+        win.titleVisibility = .visible
+        win.titlebarAppearsTransparent = false
+        win.toolbarStyle = .unifiedCompact
         win.contentViewController = hostingController
         win.isReleasedWhenClosed = false
         

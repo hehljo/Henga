@@ -49,6 +49,7 @@ struct SettingsView: View {
                 }
             }
             .listStyle(.sidebar)
+            .navigationTitle(String(localized: "tab_servers", defaultValue: "Synology Server"))
             
             Divider()
             
@@ -86,6 +87,7 @@ struct SettingsView: View {
                 selectedProfileId = store.profiles.first?.id
             }
             .id(pid)
+            .navigationTitle(profile.effectiveHubName)
         } else {
             VStack(spacing: 16) {
                 Image(systemName: "externaldrive.connected.to.line.below")
@@ -113,6 +115,7 @@ struct SettingsView: View {
                 .controlSize(.regular)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .navigationTitle(String(localized: "settings_title", defaultValue: "Einstellungen"))
         }
     }
     
