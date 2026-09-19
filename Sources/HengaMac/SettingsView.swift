@@ -72,6 +72,35 @@ struct SettingsView: View {
                     
                     Spacer()
                 }
+                
+                Divider()
+                    .padding(.vertical, 2)
+                
+                // Entwickler- & Projekt-Info
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("\(AppConfig.brandName) v\(AppConfig.appVersion)")
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        if let gh = URL(string: AppConfig.githubURL) {
+                            Link("GitHub", destination: gh)
+                                .font(.caption2)
+                        }
+                    }
+                    
+                    HStack {
+                        Text("Open Source (MIT)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        if let coffee = URL(string: AppConfig.buyMeACoffeeURL) {
+                            Link("☕ Spenden", destination: coffee)
+                                .font(.caption2)
+                        }
+                    }
+                }
             }
             .padding(10)
             .background(Color(NSColor.controlBackgroundColor))

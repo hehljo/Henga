@@ -8,6 +8,7 @@
 [![macOS 14+](https://img.shields.io/badge/macOS-14.0%2B-blue?logo=apple)](https://apple.com)
 [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange?logo=swift)](https://swift.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-yellow.svg?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/pommesbude)
 [![Quality Gate](https://img.shields.io/badge/Quality%20Gate-PASSED-brightgreen)](#quality-gate)
 [![Tests](https://img.shields.io/badge/Tests-13%2F13%20passed-brightgreen)](#tests)
 
@@ -69,6 +70,18 @@ Henga
    - Select scheme **`HengaMac`**
    - Press **Cmd + R**
    - Click the 🪝 icon in your menu bar and open **Settings** to add your NAS!
+
+---
+
+## Support & Donation
+
+If Henga saves you time and keeps your macOS Finder uncluttered, consider supporting the development:
+
+<div align="center">
+
+[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://buymeacoffee.com/pommesbude)
+
+</div>
 
 ---
 
