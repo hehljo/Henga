@@ -49,7 +49,7 @@ Henga
 └── HengaCLI             # Headless diagnostic tool for automation & server testing
 ```
 
-- **Zero-Token Master Quality Gate:** Validated against `/root/.claude/qualitygate/master_gate.py`.
+- **Zero-Token Master Quality Gate:** Strenge lokale Validierung für macOS/Swift 6 Architektur.
 - **Adversarial Sabotage Tests:** Tested against path injection attacks, malformed DSM 7 JWT error responses, and corrupt mount outputs.
 
 ---

@@ -14,3 +14,8 @@ DerivedData/
 # SPM
 .swiftpm/
 Package.resolved
+
+# Xcode User State
+xcuserdata/
+*.xcuserdatad
+

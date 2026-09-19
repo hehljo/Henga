@@ -15,6 +15,7 @@ struct SettingsView: View {
             sidebarSection
         } detail: {
             detailSection
+                .navigationTitle(String(localized: "settings_title", defaultValue: "Einstellungen"))
         }
         .frame(minWidth: 720, minHeight: 520)
         .onAppear {
