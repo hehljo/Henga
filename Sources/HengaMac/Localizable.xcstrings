@@ -1,6 +1,42 @@
 {
   "sourceLanguage" : "de",
   "strings" : {
+    "%@ v%@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ v%2$@"
+          }
+        }
+      }
+    },
+    "%lld von %lld Freigaben aktiv" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld von %2$lld Freigaben aktiv"
+          }
+        }
+      }
+    },
+    "%lld/%lld Freigaben verbunden" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld Freigaben verbunden"
+          }
+        }
+      }
+    },
+    "☕ Spenden" : {
+
+    },
+    "Alle Freigaben dieses Servers trennen" : {
+
+    },
     "app_title" : {
       "comment" : "App-Titel",
       "extractionState" : "manual",
@@ -18,6 +54,12 @@
           }
         }
       }
+    },
+    "Auto" : {
+
+    },
+    "Bei Anmeldung starten" : {
+
     },
     "btn_add_server" : {
       "extractionState" : "manual",
@@ -120,6 +162,36 @@
           }
         }
       }
+    },
+    "Fehler kopieren" : {
+
+    },
+    "Finder-Hub Name (z.B. NAS-Home)" : {
+
+    },
+    "Freigaben dieses Servers verbinden" : {
+
+    },
+    "Gespeichert!" : {
+
+    },
+    "Getrennt" : {
+
+    },
+    "GitHub" : {
+
+    },
+    "Henga beenden" : {
+
+    },
+    "Im Finder öffnen (Hub-Ordner)" : {
+
+    },
+    "In Finder-Seitenleiste anzeigen (Favoriten)" : {
+
+    },
+    "Kopiert!" : {
+
     },
     "lbl_automount" : {
       "extractionState" : "manual",
@@ -410,6 +482,24 @@
         }
       }
     },
+    "Name" : {
+
+    },
+    "Netzwerk offline" : {
+
+    },
+    "Netzwerk verbunden" : {
+
+    },
+    "Öffnet das Einstellungsfenster" : {
+
+    },
+    "Öffnet die Einstellungen zum Anlegen eines neuen NAS-Servers" : {
+
+    },
+    "Open Source (MIT)" : {
+
+    },
     "open_in_finder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -427,6 +517,9 @@
         }
       }
     },
+    "Remote Pfad (z.B. video)" : {
+
+    },
     "settings_title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -443,6 +536,9 @@
           }
         }
       }
+    },
+    "Status aller Server und Freigaben aktualisieren" : {
+
     },
     "tab_servers" : {
       "extractionState" : "manual",
