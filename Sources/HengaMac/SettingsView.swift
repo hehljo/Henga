@@ -242,6 +242,7 @@ struct ProfileDetailEditView: View {
                                 Image(systemName: "trash")
                             }
                             .buttonStyle(.plain)
+                            .help(String(localized: "btn_delete_share_help", defaultValue: "Freigabe löschen"))
                         }
                     }
                     
@@ -283,6 +284,7 @@ struct ProfileDetailEditView: View {
                                     .font(.caption2)
                             }
                             .buttonStyle(.borderless)
+                            .help(String(localized: "btn_copy_error_help", defaultValue: "Fehlermeldung in die Zwischenablage kopieren"))
                         }
                     }
                     .padding(8)
