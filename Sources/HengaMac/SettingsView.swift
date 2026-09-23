@@ -94,11 +94,6 @@ struct SettingsView: View {
                         Text("Open Source (MIT)")
                             .font(.caption2)
                             .foregroundColor(.secondary)
-                        Spacer()
-                        if let coffee = URL(string: AppConfig.buyMeACoffeeURL) {
-                            Link("☕ Spenden", destination: coffee)
-                                .font(.caption2)
-                        }
                     }
                 }
             }

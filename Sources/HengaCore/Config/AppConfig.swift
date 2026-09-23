@@ -11,5 +11,4 @@ public struct AppConfig: Sendable {
     public static let defaultDSMPort = 5001
     public static let pingTimeoutSeconds: TimeInterval = 2.0
     public static let githubURL = "https://github.com/hehljo/Henga"
-    public static let buyMeACoffeeURL = "https://buymeacoffee.com/pommesbude"
 }
