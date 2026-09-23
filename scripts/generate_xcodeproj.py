@@ -1,5 +1,177 @@
 import os
+import re
+import sys
 import hashlib
+
+# Build-Settings je Konfiguration, exakt in Xcodes Schreibweise (Werte roh,
+# inkl. Anfuehrungszeichen). Einzige Quelle: Aenderungen hier eintragen, dann
+# neu generieren; `--check` meldet Drift gegen die eingecheckte project.pbxproj.
+APP_BUILD_NUMBER = "3"
+APP_DEBUG_SETTINGS = {
+    'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
+    'CODE_SIGN_ENTITLEMENTS': 'Sources/HengaMac/App.entitlements',
+    'CODE_SIGN_IDENTITY': '"Apple Development"',
+    'CODE_SIGN_STYLE': 'Automatic',
+    'COMBINE_HIDPI_IMAGES': 'YES',
+    'CURRENT_PROJECT_VERSION': APP_BUILD_NUMBER,
+    'DEAD_CODE_STRIPPING': 'YES',
+    'DEVELOPMENT_TEAM': 'G7AU53ARQH',
+    'ENABLE_APP_SANDBOX': 'YES',
+    'ENABLE_HARDENED_RUNTIME': 'YES',
+    'ENABLE_INCOMING_NETWORK_CONNECTIONS': 'NO',
+    'ENABLE_OUTGOING_NETWORK_CONNECTIONS': 'NO',
+    'ENABLE_RESOURCE_ACCESS_AUDIO_INPUT': 'NO',
+    'ENABLE_RESOURCE_ACCESS_BLUETOOTH': 'NO',
+    'ENABLE_RESOURCE_ACCESS_CALENDARS': 'NO',
+    'ENABLE_RESOURCE_ACCESS_CAMERA': 'NO',
+    'ENABLE_RESOURCE_ACCESS_CONTACTS': 'NO',
+    'ENABLE_RESOURCE_ACCESS_LOCATION': 'NO',
+    'ENABLE_RESOURCE_ACCESS_PRINTING': 'NO',
+    'ENABLE_RESOURCE_ACCESS_USB': 'NO',
+    'GENERATE_INFOPLIST_FILE': 'NO',
+    'INFOPLIST_FILE': 'Sources/HengaMac/Info.plist',
+    'INFOPLIST_KEY_CFBundleDisplayName': 'Henga',
+    'INFOPLIST_KEY_LSApplicationCategoryType': '"public.app-category.utilities"',
+    'LD_RUNPATH_SEARCH_PATHS': ['"$(inherited)"', '"@executable_path/../Frameworks"'],
+    'MARKETING_VERSION': '1.0',
+    'PRODUCT_BUNDLE_IDENTIFIER': 'com.hehljo.Henga',
+    'PRODUCT_NAME': '"$(TARGET_NAME)"',
+    'PROVISIONING_PROFILE_SPECIFIER': '""',
+    'SWIFT_EMIT_LOC_STRINGS': 'YES',
+    'SWIFT_VERSION': '5.0',
+}
+PROJECT_RELEASE_SETTINGS = {
+    'ALWAYS_SEARCH_USER_PATHS': 'NO',
+    'CLANG_ANALYZER_NONNULL': 'YES',
+    'CLANG_ENABLE_MODULES': 'YES',
+    'CLANG_ENABLE_OBJC_ARC': 'YES',
+    'CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING': 'YES',
+    'CLANG_WARN_BOOL_CONVERSION': 'YES',
+    'CLANG_WARN_COMMA': 'YES',
+    'CLANG_WARN_CONSTANT_CONVERSION': 'YES',
+    'CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS': 'YES',
+    'CLANG_WARN_EMPTY_BODY': 'YES',
+    'CLANG_WARN_ENUM_CONVERSION': 'YES',
+    'CLANG_WARN_INFINITE_RECURSION': 'YES',
+    'CLANG_WARN_INT_CONVERSION': 'YES',
+    'CLANG_WARN_NON_LITERAL_NULL_CONVERSION': 'YES',
+    'CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF': 'YES',
+    'CLANG_WARN_OBJC_LITERAL_CONVERSION': 'YES',
+    'CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER': 'YES',
+    'CLANG_WARN_RANGE_LOOP_ANALYSIS': 'YES',
+    'CLANG_WARN_STRICT_PROTOTYPES': 'YES',
+    'CLANG_WARN_SUSPICIOUS_MOVE': 'YES',
+    'CLANG_WARN_UNREACHABLE_CODE': 'YES',
+    'CLANG_WARN__DUPLICATE_METHOD_MATCH': 'YES',
+    'COPY_PHASE_STRIP': 'NO',
+    'DEAD_CODE_STRIPPING': 'YES',
+    'DEBUG_INFORMATION_FORMAT': '"dwarf-with-dsym"',
+    'DEVELOPMENT_TEAM': 'G7AU53ARQH',
+    'ENABLE_NS_ASSERTIONS': 'NO',
+    'ENABLE_STRICT_OBJC_MSGSEND': 'YES',
+    'ENABLE_USER_SCRIPT_SANDBOXING': 'YES',
+    'GCC_NO_COMMON_BLOCKS': 'YES',
+    'GCC_OPTIMIZATION_LEVEL': 's',
+    'GCC_WARN_64_TO_32_BIT_CONVERSION': 'YES',
+    'GCC_WARN_ABOUT_RETURN_TYPE': 'YES',
+    'GCC_WARN_UNDECLARED_SELECTOR': 'YES',
+    'GCC_WARN_UNINITIALIZED_AUTOS': 'YES',
+    'GCC_WARN_UNUSED_FUNCTION': 'YES',
+    'GCC_WARN_UNUSED_VARIABLE': 'YES',
+    'MACOSX_DEPLOYMENT_TARGET': '14.0',
+    'MTL_ENABLE_DEBUG_INFO': 'NO',
+    'SDKROOT': 'macosx',
+    'STRING_CATALOG_GENERATE_SYMBOLS': 'YES',
+    'SWIFT_COMPILATION_MODE': 'wholemodule',
+    'SWIFT_OPTIMIZATION_LEVEL': '"-O"',
+}
+APP_RELEASE_SETTINGS = {
+    'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
+    'CODE_SIGN_ENTITLEMENTS': 'Sources/HengaMac/App.entitlements',
+    'CODE_SIGN_IDENTITY': '"Apple Development"',
+    'CODE_SIGN_STYLE': 'Automatic',
+    'COMBINE_HIDPI_IMAGES': 'YES',
+    'CURRENT_PROJECT_VERSION': APP_BUILD_NUMBER,
+    'DEAD_CODE_STRIPPING': 'YES',
+    'DEVELOPMENT_TEAM': 'G7AU53ARQH',
+    'ENABLE_APP_SANDBOX': 'YES',
+    'ENABLE_HARDENED_RUNTIME': 'YES',
+    'ENABLE_INCOMING_NETWORK_CONNECTIONS': 'NO',
+    'ENABLE_OUTGOING_NETWORK_CONNECTIONS': 'NO',
+    'ENABLE_RESOURCE_ACCESS_AUDIO_INPUT': 'NO',
+    'ENABLE_RESOURCE_ACCESS_BLUETOOTH': 'NO',
+    'ENABLE_RESOURCE_ACCESS_CALENDARS': 'NO',
+    'ENABLE_RESOURCE_ACCESS_CAMERA': 'NO',
+    'ENABLE_RESOURCE_ACCESS_CONTACTS': 'NO',
+    'ENABLE_RESOURCE_ACCESS_LOCATION': 'NO',
+    'ENABLE_RESOURCE_ACCESS_PRINTING': 'NO',
+    'ENABLE_RESOURCE_ACCESS_USB': 'NO',
+    'GENERATE_INFOPLIST_FILE': 'NO',
+    'INFOPLIST_FILE': 'Sources/HengaMac/Info.plist',
+    'INFOPLIST_KEY_CFBundleDisplayName': 'Henga',
+    'INFOPLIST_KEY_LSApplicationCategoryType': '"public.app-category.utilities"',
+    'LD_RUNPATH_SEARCH_PATHS': ['"$(inherited)"', '"@executable_path/../Frameworks"'],
+    'MARKETING_VERSION': '1.0',
+    'PRODUCT_BUNDLE_IDENTIFIER': 'com.hehljo.Henga',
+    'PRODUCT_NAME': '"$(TARGET_NAME)"',
+    'PROVISIONING_PROFILE_SPECIFIER': '""',
+    'SWIFT_EMIT_LOC_STRINGS': 'YES',
+    'SWIFT_VERSION': '5.0',
+}
+PROJECT_DEBUG_SETTINGS = {
+    'ALWAYS_SEARCH_USER_PATHS': 'NO',
+    'CLANG_ANALYZER_NONNULL': 'YES',
+    'CLANG_ENABLE_MODULES': 'YES',
+    'CLANG_ENABLE_OBJC_ARC': 'YES',
+    'CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING': 'YES',
+    'CLANG_WARN_BOOL_CONVERSION': 'YES',
+    'CLANG_WARN_COMMA': 'YES',
+    'CLANG_WARN_CONSTANT_CONVERSION': 'YES',
+    'CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS': 'YES',
+    'CLANG_WARN_EMPTY_BODY': 'YES',
+    'CLANG_WARN_ENUM_CONVERSION': 'YES',
+    'CLANG_WARN_INFINITE_RECURSION': 'YES',
+    'CLANG_WARN_INT_CONVERSION': 'YES',
+    'CLANG_WARN_NON_LITERAL_NULL_CONVERSION': 'YES',
+    'CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF': 'YES',
+    'CLANG_WARN_OBJC_LITERAL_CONVERSION': 'YES',
+    'CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER': 'YES',
+    'CLANG_WARN_RANGE_LOOP_ANALYSIS': 'YES',
+    'CLANG_WARN_STRICT_PROTOTYPES': 'YES',
+    'CLANG_WARN_SUSPICIOUS_MOVE': 'YES',
+    'CLANG_WARN_UNREACHABLE_CODE': 'YES',
+    'CLANG_WARN__DUPLICATE_METHOD_MATCH': 'YES',
+    'COPY_PHASE_STRIP': 'NO',
+    'DEAD_CODE_STRIPPING': 'YES',
+    'DEBUG_INFORMATION_FORMAT': 'dwarf',
+    'DEVELOPMENT_TEAM': 'G7AU53ARQH',
+    'ENABLE_STRICT_OBJC_MSGSEND': 'YES',
+    'ENABLE_TESTABILITY': 'YES',
+    'ENABLE_USER_SCRIPT_SANDBOXING': 'YES',
+    'GCC_NO_COMMON_BLOCKS': 'YES',
+    'GCC_OPTIMIZATION_LEVEL': '0',
+    'GCC_WARN_64_TO_32_BIT_CONVERSION': 'YES',
+    'GCC_WARN_ABOUT_RETURN_TYPE': 'YES',
+    'GCC_WARN_UNDECLARED_SELECTOR': 'YES',
+    'GCC_WARN_UNINITIALIZED_AUTOS': 'YES',
+    'GCC_WARN_UNUSED_FUNCTION': 'YES',
+    'GCC_WARN_UNUSED_VARIABLE': 'YES',
+    'MACOSX_DEPLOYMENT_TARGET': '14.0',
+    'MTL_ENABLE_DEBUG_INFO': 'INCLUDE_SOURCE',
+    'ONLY_ACTIVE_ARCH': 'YES',
+    'SDKROOT': 'macosx',
+    'STRING_CATALOG_GENERATE_SYMBOLS': 'YES',
+    'SWIFT_ACTIVE_COMPILATION_CONDITIONS': 'DEBUG',
+    'SWIFT_OPTIMIZATION_LEVEL': '"-Onone"',
+}
+
+def pbx_str(value: str) -> str:
+    # Xcodes Schreibweise: nur Zeichen ausserhalb dieser Menge erzwingen Anfuehrungszeichen.
+    return value if re.fullmatch(r"[A-Za-z0-9_$/.]+", value) else f'"{value}"'
+
+def normalized(pbxproj: str) -> list:
+    # Xcode sortiert Eintraege um und setzt Leerzeilen; verglichen wird der Inhalt.
+    return sorted(line.strip() for line in pbxproj.splitlines() if line.strip())
 
 def make_id(key: str) -> str:
     return hashlib.md5(key.encode('utf-8')).hexdigest()[:24].upper()
@@ -93,7 +265,7 @@ def main():
     for fpath in all_swift_files:
         fid, _ = file_refs[fpath]
         fname = os.path.basename(fpath)
-        lines.append(f"\t\t{fid} /* {fname} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = \"{fname}\"; path = \"{fpath}\"; sourceTree = SOURCE_ROOT; }};")
+        lines.append(f"\t\t{fid} /* {fname} */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = {pbx_str(fname)}; path = {pbx_str(fpath)}; sourceTree = SOURCE_ROOT; }};")
     for rpath in res_files:
         fid, _ = res_refs[rpath]
         fname = os.path.basename(rpath)
@@ -103,7 +275,7 @@ def main():
             ftype = "text.json.xcstrings"
         else:
             ftype = "text.plist.xml"
-        lines.append(f"\t\t{fid} /* {fname} */ = {{isa = PBXFileReference; lastKnownFileType = {ftype}; name = \"{fname}\"; path = \"{rpath}\"; sourceTree = SOURCE_ROOT; }};")
+        lines.append(f"\t\t{fid} /* {fname} */ = {{isa = PBXFileReference; lastKnownFileType = {ftype}; name = {pbx_str(fname)}; path = {pbx_str(rpath)}; sourceTree = SOURCE_ROOT; }};")
     lines.append("/* End PBXFileReference section */")
     
     # PBXFrameworksBuildPhase
@@ -168,6 +340,7 @@ def main():
     lines.append("/* End PBXGroup section */")
     
     # PBXNativeTarget section
+    lines.append("/* Begin PBXNativeTarget section */")
     lines.append(f"\t\t{TARGET_ID} /* Henga */ = {{")
     lines.append("\t\t\tisa = PBXNativeTarget;")
     lines.append(f"\t\t\tbuildConfigurationList = {TARGET_CONFIG_LIST_ID} /* Build configuration list for PBXNativeTarget \"Henga\" */;")
@@ -193,7 +366,7 @@ def main():
     lines.append("\t\t\tisa = PBXProject;")
     lines.append("\t\t\tattributes = {")
     lines.append("\t\t\t\tBuildIndependentTargetsInParallel = 1;")
-    lines.append("\t\t\t\tLastUpgradeCheck = 1600;")
+    lines.append("\t\t\t\tLastUpgradeCheck = 2700;")
     lines.append("\t\t\t\tTargetAttributes = {")
     lines.append(f"\t\t\t\t\t{TARGET_ID} = {{")
     lines.append("\t\t\t\t\t\tCreatedOnToolsVersion = 16.0;")
@@ -250,68 +423,22 @@ def main():
     
     # XCBuildConfiguration section
     lines.append("/* Begin XCBuildConfiguration section */")
-    lines.append(f"\t\t{PROJ_DEBUG_CONFIG_ID} /* Debug */ = {{")
-    lines.append("\t\t\tisa = XCBuildConfiguration;")
-    lines.append("\t\t\tbuildSettings = {")
-    lines.append("\t\t\t\tALWAYS_SEARCH_USER_PATHS = NO;")
-    lines.append("\t\t\t\tCLANG_ANALYZER_NONNULL = YES;")
-    lines.append("\t\t\t\tCLANG_ENABLE_MODULES = YES;")
-    lines.append("\t\t\t\tCLANG_ENABLE_OBJC_ARC = YES;")
-    lines.append("\t\t\t\tCOPY_PHASE_STRIP = NO;")
-    lines.append("\t\t\t\tDEBUG_INFORMATION_FORMAT = dwarf;")
-    lines.append("\t\t\t\tENABLE_TESTABILITY = YES;")
-    lines.append("\t\t\t\tGCC_OPTIMIZATION_LEVEL = 0;")
-    lines.append("\t\t\t\tMACOSX_DEPLOYMENT_TARGET = 14.0;")
-    lines.append("\t\t\t\tMTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;")
-    lines.append("\t\t\t\tSDKROOT = macosx;")
-    lines.append("\t\t\t\tSWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;")
-    lines.append("\t\t\t\tSWIFT_OPTIMIZATION_LEVEL = \"-Onone\";")
-    lines.append("\t\t\t};")
-    lines.append("\t\t\tname = Debug;")
-    lines.append("\t\t};")
-    
-    lines.append(f"\t\t{PROJ_RELEASE_CONFIG_ID} /* Release */ = {{")
-    lines.append("\t\t\tisa = XCBuildConfiguration;")
-    lines.append("\t\t\tbuildSettings = {")
-    lines.append("\t\t\t\tALWAYS_SEARCH_USER_PATHS = NO;")
-    lines.append("\t\t\t\tCLANG_ANALYZER_NONNULL = YES;")
-    lines.append("\t\t\t\tCLANG_ENABLE_MODULES = YES;")
-    lines.append("\t\t\t\tCLANG_ENABLE_OBJC_ARC = YES;")
-    lines.append("\t\t\t\tCOPY_PHASE_STRIP = NO;")
-    lines.append("\t\t\t\tDEBUG_INFORMATION_FORMAT = \"dwarf-with-dsym\";")
-    lines.append("\t\t\t\tENABLE_NS_ASSERTIONS = NO;")
-    lines.append("\t\t\t\tGCC_OPTIMIZATION_LEVEL = s;")
-    lines.append("\t\t\t\tMACOSX_DEPLOYMENT_TARGET = 14.0;")
-    lines.append("\t\t\t\tMTL_ENABLE_DEBUG_INFO = NO;")
-    lines.append("\t\t\t\tSDKROOT = macosx;")
-    lines.append("\t\t\t\tSWIFT_COMPILATION_MODE = \"wholemodule\";")
-    lines.append("\t\t\t\tSWIFT_OPTIMIZATION_LEVEL = \"-O\";")
-    lines.append("\t\t\t};")
-    lines.append("\t\t\tname = Release;")
-    lines.append("\t\t};")
-    
-    for cid, cname in [(TARGET_DEBUG_CONFIG_ID, "Debug"), (TARGET_RELEASE_CONFIG_ID, "Release")]:
+    for cid, cname, settings in [
+        (PROJ_DEBUG_CONFIG_ID, "Debug", PROJECT_DEBUG_SETTINGS),
+        (PROJ_RELEASE_CONFIG_ID, "Release", PROJECT_RELEASE_SETTINGS),
+        (TARGET_DEBUG_CONFIG_ID, "Debug", APP_DEBUG_SETTINGS),
+        (TARGET_RELEASE_CONFIG_ID, "Release", APP_RELEASE_SETTINGS),
+    ]:
         lines.append(f"\t\t{cid} /* {cname} */ = {{")
         lines.append("\t\t\tisa = XCBuildConfiguration;")
         lines.append("\t\t\tbuildSettings = {")
-        lines.append("\t\t\t\tASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;")
-        lines.append("\t\t\t\tCODE_SIGN_ENTITLEMENTS = \"Sources/HengaMac/App.entitlements\";")
-        lines.append("\t\t\t\tCODE_SIGN_IDENTITY = \"-\";")
-        lines.append("\t\t\t\tCODE_SIGN_STYLE = Automatic;")
-        lines.append("\t\t\t\tCOMBINE_HIDPI_IMAGES = YES;")
-        lines.append("\t\t\t\tCURRENT_PROJECT_VERSION = 1;")
-        lines.append("\t\t\t\tENABLE_HARDENED_RUNTIME = YES;")
-        lines.append("\t\t\t\tGENERATE_INFOPLIST_FILE = NO;")
-        lines.append("\t\t\t\tINFOPLIST_FILE = \"Sources/HengaMac/Info.plist\";")
-        lines.append("\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (")
-        lines.append("\t\t\t\t\t\"$(inherited)\",")
-        lines.append("\t\t\t\t\t\"@executable_path/../Frameworks\",")
-        lines.append("\t\t\t\t);")
-        lines.append("\t\t\t\tMARKETING_VERSION = 1.0;")
-        lines.append("\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = com.hehljo.Henga;")
-        lines.append("\t\t\t\tPRODUCT_NAME = \"$(TARGET_NAME)\";")
-        lines.append("\t\t\t\tSWIFT_EMIT_LOC_STRINGS = YES;")
-        lines.append("\t\t\t\tSWIFT_VERSION = 5.0;")
+        for key, value in settings.items():
+            if isinstance(value, list):
+                lines.append(f"\t\t\t\t{key} = (")
+                lines.extend(f"\t\t\t\t\t{item}," for item in value)
+                lines.append("\t\t\t\t);")
+            else:
+                lines.append(f"\t\t\t\t{key} = {value};")
         lines.append("\t\t\t};")
         lines.append(f"\t\t\tname = {cname};")
         lines.append("\t\t};")
@@ -344,10 +471,25 @@ def main():
     lines.append(f"\trootObject = {PROJECT_ID} /* Project object */;")
     lines.append("}")
     
-    with open(os.path.join(proj_dir, "project.pbxproj"), "w", encoding="utf-8") as f:
-        f.write("\n".join(lines) + "\n")
+    target = os.path.join(proj_dir, "project.pbxproj")
+    content = "\n".join(lines) + "\n"
+    if "--check" in sys.argv:
+        # Drift-Gate: Xcode-Aenderungen (Sandbox, Team, Kategorie, Buildnummer)
+        # muessen hier eingetragen sein, sonst loescht das naechste Generieren sie.
+        with open(target, encoding="utf-8") as f:
+            current = f.read()
+        if normalized(current) != normalized(content):
+            import difflib
+            diff = [l for l in difflib.unified_diff(normalized(current), normalized(content), "project.pbxproj", "generator", lineterm="", n=0) if l[:1] in "+-" and l[:3] not in ("+++", "---")]
+            print(f"DRIFT: {len(diff)} Zeilen weichen ab (- eingecheckt, + Generator):")
+            print("\n".join(diff[:40]))
+            sys.exit(1)
+        print("OK: project.pbxproj entspricht dem Generator")
+        return
+    with open(target, "w", encoding="utf-8") as f:
+        f.write(content)
         
-    print(f"Generated {os.path.join(proj_dir, 'project.pbxproj')}")
+    print(f"Generated {target}")
 
 if __name__ == "__main__":
     main()
