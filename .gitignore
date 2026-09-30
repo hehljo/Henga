@@ -18,4 +18,10 @@ Package.resolved
 # Xcode User State
 xcuserdata/
 *.xcuserdatad
+*.xcuserstate
 
+
+# Interne Arbeitsnotizen (nur lokal)
+HANDOVER.md
+MASTER_ROADMAP.md
+AGENTS.md

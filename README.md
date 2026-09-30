@@ -4,7 +4,7 @@
 
 # Henga
 
-**Native macOS Menu Bar App for robust, zero-hassle NAS mounting.**  
+**Native macOS Menu Bar App for robust, zero-hassle NAS mounting.**<br>
 *Auto-mount SMB shares without duplicate `/Volumes/share-1` ghost mounts, keychain prompts, or cluttered system views.*
 
 <a href="https://apps.apple.com/app/id6814454906"><img src="https://toolbox.marketingtools.apple.com/api/badges/download-on-the-mac-app-store/black/en-us" alt="Download on the Mac App Store" height="48"></a>
@@ -36,7 +36,7 @@ Anyone using a Synology NAS or network storage on macOS knows the daily struggle
 ## Key Features
 
 - 🚀 **Zero Ghost Mounts (`-o nobrowse`):** Mounts network drives with the kernel `MNT_NOBROWSE` flag. Your macOS "Computer" view remains 100% clean and uncluttered.
-- 🪝 **Central Finder Hub (`~/DiskStation`):** All active shares are neatly linked into your designated Finder hub folder (just like ShellFish or iCloud Drive).
+- 📁 **Central Finder Hub (`~/DiskStation`):** All active shares are neatly linked into your designated Finder hub folder (just like ShellFish or iCloud Drive).
 - 🔐 **Synology DSM 7 2FA Support:** Native FileStation WebAPI discovery with trusted device token persistence (`did`). Enter your 2FA OTP code once; never get prompted again.
 - 🔄 **Smart Auto-Mount & Reconnect:** Automatically monitors reachability (POSIX non-blocking socket checks) and transparently reconnects shares when network returns.
 - ⚡ **Launch at Login:** Zero-hassle autostart using Apple's modern `SMAppService.mainApp` API.
