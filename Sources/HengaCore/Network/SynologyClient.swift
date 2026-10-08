@@ -103,7 +103,7 @@ public actor SynologyClient {
             throw SynoClientError.invalidHost
         }
         
-        var queryItems = [
+        var params = [
             URLQueryItem(name: "api", value: "SYNO.API.Auth"),
             URLQueryItem(name: "version", value: "3"),
             URLQueryItem(name: "method", value: "login"),
@@ -116,23 +116,22 @@ public actor SynologyClient {
         ]
         
         if let savedDid = profile.deviceID, !savedDid.isEmpty {
-            queryItems.append(URLQueryItem(name: "device_id", value: savedDid))
+            params.append(URLQueryItem(name: "device_id", value: savedDid))
             print("[Henga] 🔑 Verwende gespeicherten 2FA-Geräte-Token (did) – kein OTP nötig.")
         } else if let otp = otpCode?.trimmingCharacters(in: .whitespacesAndNewlines), !otp.isEmpty {
-            queryItems.append(URLQueryItem(name: "otp_code", value: otp))
+            params.append(URLQueryItem(name: "otp_code", value: otp))
             print("[Henga] 🔢 Sende OTP Code für 2FA...")
         }
         
-        var comp = URLComponents(url: baseURL.appendingPathComponent("auth.cgi"), resolvingAgainstBaseURL: false)
-        comp?.queryItems = queryItems
-        
-        guard let url = comp?.url else {
-            throw SynoClientError.invalidHost
-        }
+        // Zugangsdaten nur im Request-Body: eine URL landet bei Netzfehlern wörtlich im Log.
+        var request = URLRequest(url: baseURL.appendingPathComponent("auth.cgi"))
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpBody = Self.formEncoded(params)
         
         print("[Henga] 🔐 Sende Login-Anfrage an \(baseURL) (User: \(profile.username), 2FA-Token: \(profile.deviceID != nil ? "Ja" : "Nein"))...")
         
-        let (data, response) = try await session.data(from: url)
+        let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
             throw SynoClientError.networkError("HTTP Status ungültig")
         }
@@ -169,6 +168,16 @@ public actor SynologyClient {
         return (authData.sid, did)
     }
     
+    /// application/x-www-form-urlencoded; kodiert alles außer ASCII-Unreserved (RFC 3986).
+    static func formEncoded(_ items: [URLQueryItem]) -> Data {
+        let allowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+        return Data(items.map { item in
+            let name = item.name.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+            let value = (item.value ?? "").addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+            return "\(name)=\(value)"
+        }.joined(separator: "&").utf8)
+    }
+
     /// Holt Liste aller freigegebenen gemeinsamen Ordner (Shared Folders)
     public func listSharedFolders() async throws -> [SynoSharedFolder] {
         guard let baseURL = profile.dsmBaseURL else {
