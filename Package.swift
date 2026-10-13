@@ -37,7 +37,8 @@ let package = Package(
             ],
             resources: [
                 .process("Assets.xcassets"),
-                .process("Localizable.xcstrings")
+                .process("Localizable.xcstrings"),
+                .process("InfoPlist.xcstrings")
             ]
         ),
         .executableTarget(

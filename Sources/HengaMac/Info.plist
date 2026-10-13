@@ -30,5 +30,7 @@
 	<true/>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Die App benötigt Zugriff auf dein lokales Netzwerk, um NAS-Freigaben zu finden und zu verbinden.</string>
 </dict>
 </plist>

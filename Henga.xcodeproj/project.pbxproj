@@ -29,6 +29,7 @@
 		D336AD459E329953AE483CF9 /* ProfileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96DD8DA18135056617F806FC /* ProfileManager.swift */; };
 		DC5BB446B3DA31D2E849019F /* ServerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CADF891CFEA2F1CC205534DC /* ServerProfile.swift */; };
 		F090B5FDB61192D84E9E083F /* NetworkReachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = D862F2C4692E1440BB3B88C9 /* NetworkReachability.swift */; };
+		54717DC9DC0D351A02A4533B /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A665DAEA5E481C2436153F74 /* InfoPlist.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -57,6 +58,7 @@
 		F5A2027371B4F5E53647DF13 /* MenuBarContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MenuBarContentView.swift; path = Sources/HengaMac/MenuBarContentView.swift; sourceTree = SOURCE_ROOT; };
 		F6DEF94EF82CE608E82C7CE0 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = Sources/HengaMac/Localizable.xcstrings; sourceTree = SOURCE_ROOT; };
 		F713869595355A27151FDF39 /* ShareMount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ShareMount.swift; path = Sources/HengaCore/Models/ShareMount.swift; sourceTree = SOURCE_ROOT; };
+		A665DAEA5E481C2436153F74 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = InfoPlist.xcstrings; path = Sources/HengaMac/InfoPlist.xcstrings; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -111,6 +113,7 @@
 				6D1806A2C4B5EC565EF98353 /* SettingsView.swift */,
 				BB53CE36A3F7B051B5EBABF3 /* Assets.xcassets */,
 				F6DEF94EF82CE608E82C7CE0 /* Localizable.xcstrings */,
+				A665DAEA5E481C2436153F74 /* InfoPlist.xcstrings */,
 				63E33CA1F25E3C4BB2650483 /* Info.plist */,
 				DFA4F0C9560A869C640C8255 /* App.entitlements */,
 			);
@@ -184,6 +187,7 @@
 			files = (
 				D00F0311F5B320E92053BB71 /* Assets.xcassets in Resources */,
 				69CF384F72F9BF7AF50604E3 /* Localizable.xcstrings in Resources */,
+				54717DC9DC0D351A02A4533B /* InfoPlist.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

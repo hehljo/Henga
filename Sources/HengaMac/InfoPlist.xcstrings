@@ -1,0 +1,23 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "NSLocalNetworkUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die App benötigt Zugriff auf dein lokales Netzwerk, um NAS-Freigaben zu finden und zu verbinden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app needs access to your local network to find and connect to NAS shares."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

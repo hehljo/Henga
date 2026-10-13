@@ -53,7 +53,13 @@ public actor SynologyClient {
         self.profile = profile
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 10.0
+        #if os(macOS)
+        // Der erste NAS-Zugriff kann auf die lokale Netzwerkfreigabe warten.
+        config.waitsForConnectivity = true
+        config.timeoutIntervalForResource = 60.0
+        #else
         config.timeoutIntervalForResource = 15.0
+        #endif
         
         let delegate = SynologySessionDelegate(allowSelfSigned: true)
         self.sessionDelegate = delegate

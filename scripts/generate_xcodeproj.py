@@ -206,9 +206,12 @@ def main():
         bid = make_id(f"build_file_{fpath}")
         file_refs[fpath] = (fid, bid)
         
-    res_files = [
+    resource_files = [
         "Sources/HengaMac/Assets.xcassets",
         "Sources/HengaMac/Localizable.xcstrings",
+        "Sources/HengaMac/InfoPlist.xcstrings",
+    ]
+    res_files = resource_files + [
         "Sources/HengaMac/Info.plist",
         "Sources/HengaMac/App.entitlements"
     ]
@@ -253,7 +256,7 @@ def main():
         fid, bid = file_refs[fpath]
         fname = os.path.basename(fpath)
         lines.append(f"\t\t{bid} /* {fname} in Sources */ = {{isa = PBXBuildFile; fileRef = {fid} /* {fname} */; }};")
-    for rpath in ["Sources/HengaMac/Assets.xcassets", "Sources/HengaMac/Localizable.xcstrings"]:
+    for rpath in resource_files:
         fid, bid = res_refs[rpath]
         fname = os.path.basename(rpath)
         lines.append(f"\t\t{bid} /* {fname} in Resources */ = {{isa = PBXBuildFile; fileRef = {fid} /* {fname} */; }};")
@@ -397,7 +400,7 @@ def main():
     lines.append("\t\t\tisa = PBXResourcesBuildPhase;")
     lines.append("\t\t\tbuildActionMask = 2147483647;")
     lines.append("\t\t\tfiles = (")
-    for rpath in ["Sources/HengaMac/Assets.xcassets", "Sources/HengaMac/Localizable.xcstrings"]:
+    for rpath in resource_files:
         _, bid = res_refs[rpath]
         fname = os.path.basename(rpath)
         lines.append(f"\t\t\t\t{bid} /* {fname} in Resources */,")
