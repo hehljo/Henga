@@ -6,7 +6,7 @@ import hashlib
 # Build-Settings je Konfiguration, exakt in Xcodes Schreibweise (Werte roh,
 # inkl. Anfuehrungszeichen). Einzige Quelle: Aenderungen hier eintragen, dann
 # neu generieren; `--check` meldet Drift gegen die eingecheckte project.pbxproj.
-APP_BUILD_NUMBER = "4"
+APP_BUILD_NUMBER = "5"
 APP_MARKETING_VERSION = "1.1"
 APP_DEBUG_SETTINGS = {
     'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
