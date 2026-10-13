@@ -7,6 +7,7 @@ import HengaCore
 
 struct MenuBarContentView: View {
     @Environment(MountAppStore.self) private var store
+    @State private var mountErrors: [UUID: String] = [:]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -91,6 +92,14 @@ struct MenuBarContentView: View {
                 Text("\(mountedCount) von \(relevantShares.count) Freigaben aktiv")
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
+                
+                if let error = mountErrors[profile.id] {
+                    Text(error)
+                        .font(.system(size: 11))
+                        .foregroundColor(.red)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             
             Spacer()
@@ -194,9 +203,15 @@ struct MenuBarContentView: View {
         Task {
             let auto = profile.shares.filter { $0.autoMount }
             let targets = auto.isEmpty ? profile.shares : auto
+            var firstError: String?
             for share in targets {
-                try? await store.mountShare(share, from: profile)
+                do {
+                    try await store.mountShare(share, from: profile)
+                } catch {
+                    firstError = firstError ?? "\(share.name): \(error.localizedDescription)"
+                }
             }
+            mountErrors[profile.id] = firstError
             updateAllFinderLinks()
         }
     }

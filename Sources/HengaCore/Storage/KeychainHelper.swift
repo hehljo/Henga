@@ -25,7 +25,10 @@ public final class KeychainHelper: @unchecked Sendable {
             kSecAttrService as String: service,
             kSecAttrAccount as String: fullAccount
         ]
-        SecItemDelete(deleteQuery as CFDictionary)
+        let deleteStatus = SecItemDelete(deleteQuery as CFDictionary)
+        if deleteStatus != errSecSuccess && deleteStatus != errSecItemNotFound {
+            print("[Henga] ⚠️ Keychain: alter Eintrag nicht löschbar (\(Self.describe(deleteStatus)))")
+        }
         
         // Neu anlegen mit kSecAttrAccessibleAfterFirstUnlock
         let addQuery: [String: Any] = [
@@ -37,6 +40,9 @@ public final class KeychainHelper: @unchecked Sendable {
         ]
         
         let status = SecItemAdd(addQuery as CFDictionary, nil)
+        if status != errSecSuccess {
+            print("[Henga] ❌ Keychain: Passwort nicht gespeichert (\(Self.describe(status)))")
+        }
         return status == errSecSuccess
     }
     
@@ -53,6 +59,9 @@ public final class KeychainHelper: @unchecked Sendable {
         
         var item: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &item)
+        if status != errSecSuccess && status != errSecItemNotFound {
+            print("[Henga] ❌ Keychain: Passwort nicht lesbar (\(Self.describe(status)))")
+        }
         
         guard status == errSecSuccess,
               let data = item as? Data,
@@ -60,6 +69,12 @@ public final class KeychainHelper: @unchecked Sendable {
             return nil
         }
         return pw
+    }
+    
+    /// OSStatus mit Systemtext fürs Protokoll – ohne Passwortdaten
+    private static func describe(_ status: OSStatus) -> String {
+        let text = SecCopyErrorMessageString(status, nil) as String? ?? "unbekannt"
+        return "OSStatus \(status): \(text)"
     }
     
     /// Löscht ein Passwort aus dem Schlüsselbund

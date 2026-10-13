@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(NetFS)
+import NetFS
+#endif
 
 public struct ActiveMountInfo: Identifiable, Equatable, Sendable {
     public var id: String { mountPoint }
@@ -83,86 +86,122 @@ public final class DefaultMountExecutor: MountExecutor, @unchecked Sendable {
         return results
     }
     
-    /// Mountet mit -o nobrowse (MNT_NOBROWSE Flag im Kernel VFS)
-    /// Dadurch blendet der macOS Finder das Laufwerk in 'Computer' ('MacBook Air von Johannes') VOLLSTÄNDIG aus!
-    /// Zugriff erfolgt 100% sauber und exklusiv über den Finder-Hub Ordner (~/DiskStation)!
+    /// Mountet über NetFS mit MNT_DONTBROWSE (entspricht `-o nobrowse`): das Volume
+    /// taucht nicht in Finder/Disk Arbitration auf, Zugriff nur über den Henga-Ordner.
+    ///
+    /// Kein `mount_smbfs`-Kindprozess: der erbt die App Sandbox und kann das SMB-Gerät
+    /// im Kernel nicht öffnen ("1025 failures to open smb device"). NetFS mountet
+    /// sandbox-kompatibel in den Container (belegt am 13.10.2026 mit einer sandboxed Probe).
     public func mountVolume(url: URL, mountPoint: String, username: String, password: String?) async throws {
         guard let host = url.host else {
             throw SynoClientError.invalidHost
         }
         let share = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        
         let fm = FileManager.default
         if !fm.fileExists(atPath: mountPoint) {
             try fm.createDirectory(atPath: mountPoint, withIntermediateDirectories: true)
         }
         
-        var userPart = username
-        if let pw = password, !pw.isEmpty {
-            let encodedPw = pw.addingPercentEncoding(withAllowedCharacters: .urlPasswordAllowed) ?? pw
-            let encodedUser = username.addingPercentEncoding(withAllowedCharacters: .urlUserAllowed) ?? username
-            userPart = "\(encodedUser):\(encodedPw)"
+        // Zugangsdaten gehen getrennt an NetFS, nie in die URL
+        var components = URLComponents()
+        components.scheme = "smb"
+        components.host = host
+        components.user = username
+        components.path = "/\(share)"
+        guard let smbURL = components.url else {
+            throw SynoClientError.invalidHost
         }
         
-        let smbSource = "//\(userPart)@\(host)/\(share)"
-        let safeLogSource = "//\(username):***@\(host)/\(share)"
-        print("[Henga] ⚙️ Führe unsichtbaren Mount aus (-o nobrowse): \(safeLogSource) -> \(mountPoint)")
+        print("[Henga] ⚙️ Führe unsichtbaren NetFS-Mount aus (MNT_DONTBROWSE): //\(username)@\(host)/\(share) -> \(mountPoint)")
         
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/sbin/mount_smbfs")
-        // -o nobrowse versteckt das Volume komplett vor Apples Disk Arbitration und Finder-Computer-Ansicht!
-        process.arguments = ["-o", "nobrowse", smbSource, mountPoint]
+        #if canImport(NetFS)
+        let pw = (password?.isEmpty == false) ? password : nil
+        let rc = await Task.detached(priority: .userInitiated) {
+            DefaultMountExecutor.netFSMount(url: smbURL, mountPoint: mountPoint, username: username, password: pw)
+        }.value
         
-        let errPipe = Pipe()
-        process.standardError = errPipe
-        process.standardOutput = FileHandle.nullDevice
-        
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
-            print("[Henga] ❌ mount_smbfs Prozessfehler: \(error.localizedDescription)")
-            throw error
+        if rc != 0 {
+            let reason = DefaultMountExecutor.describeNetFSError(rc)
+            print("[Henga] ❌ NetFS-Mount fehlgeschlagen (Code \(rc)): \(reason)")
+            if let contents = try? fm.contentsOfDirectory(atPath: mountPoint), contents.isEmpty {
+                try? fm.removeItem(atPath: mountPoint)
+            }
+            throw SynoClientError.networkError("Mount fehlgeschlagen (Code \(rc)): \(reason)")
         }
-        
-        if process.terminationStatus != 0 {
-            let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
-            let errMsg = String(data: errData, encoding: .utf8) ?? "Unbekannter Fehler"
-            let trimmedMsg = errMsg.trimmingCharacters(in: .whitespacesAndNewlines)
-            print("[Henga] ❌ mount_smbfs fehlgeschlagen (Code \(process.terminationStatus)): \(trimmedMsg)")
-            try? fm.removeItem(atPath: mountPoint)
-            throw SynoClientError.networkError("Mount fehlgeschlagen (Code \(process.terminationStatus)): \(trimmedMsg)")
-        } else {
-            print("[Henga] 🎉 Unsichtbarer Mount (-o nobrowse) erfolgreich: \(mountPoint) (Systemübersicht ist 100% frei!)")
-        }
+        print("[Henga] 🎉 Unsichtbarer Mount erfolgreich: \(mountPoint)")
+        #else
+        throw SynoClientError.networkError("Mount wird nur unter macOS unterstützt")
+        #endif
     }
     
-    /// Hängt Volume via `/sbin/umount` aus
+    #if canImport(NetFS)
+    /// Blockierender NetFS-Aufruf; läuft deshalb in einem eigenen Task.
+    private static func netFSMount(url: URL, mountPoint: String, username: String, password: String?) -> Int32 {
+        let openOptions = NSMutableDictionary()
+        // Keine System-Anmeldedialoge: Henga verwaltet die Zugangsdaten selbst
+        openOptions[kNAUIOptionKey] = kNAUIOptionNoUI
+        let mountOptions = NSMutableDictionary()
+        mountOptions[kNetFSMountFlagsKey] = MNT_DONTBROWSE
+        mountOptions[kNetFSMountAtMountDirKey] = true
+        
+        var mountPoints: Unmanaged<CFArray>?
+        let rc = NetFSMountURLSync(
+            url as CFURL,
+            URL(fileURLWithPath: mountPoint, isDirectory: true) as CFURL,
+            username as CFString,
+            password as CFString?,
+            openOptions,
+            mountOptions,
+            &mountPoints
+        )
+        mountPoints?.release()
+        return rc
+    }
+    
+    /// Übersetzt NetFS-Rückgaben (errno oder NetAuth-Codes) in eine lesbare Ursache
+    static func describeNetFSError(_ rc: Int32) -> String {
+        switch rc {
+        case EAUTH:
+            return "Anmeldung abgelehnt – Benutzername oder Passwort prüfen"
+        case ENOENT:
+            return "Freigabe auf dem Server nicht gefunden"
+        case EHOSTUNREACH, ETIMEDOUT, ECONNREFUSED:
+            return "Server nicht erreichbar"
+        case EPERM, EACCES:
+            return "Keine Berechtigung für diese Freigabe"
+        case let code where code > 0:
+            return String(cString: strerror(code))
+        default:
+            return "NetFS-Fehler"
+        }
+    }
+    #endif
+    
+    /// Hängt das Volume über FileManager aus – ohne `/sbin/umount`-Kindprozess,
+    /// der in der Sandbox dieselben Grenzen hätte wie `mount_smbfs`.
     public func unmountVolume(mountPoint: String, force: Bool = false) async throws {
-        print("[Henga] ⚙️ Führe /sbin/umount aus für: \(mountPoint) (Force: \(force))")
+        print("[Henga] ⚙️ Hänge aus: \(mountPoint) (Force: \(force))")
         
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/sbin/umount")
-        process.arguments = force ? ["-f", mountPoint] : [mountPoint]
-        
-        let errPipe = Pipe()
-        process.standardError = errPipe
-        process.standardOutput = FileHandle.nullDevice
-        
-        try process.run()
-        process.waitUntilExit()
-        
-        if process.terminationStatus != 0 {
-            let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
-            let errMsg = String(data: errData, encoding: .utf8) ?? "Fehler beim Aushängen"
-            print("[Henga] ❌ umount Fehler: \(errMsg)")
-            throw SynoClientError.networkError("umount fehlgeschlagen: \(errMsg)")
+        #if os(macOS)
+        let fm = FileManager.default
+        do {
+            try await fm.unmountVolume(at: URL(fileURLWithPath: mountPoint, isDirectory: true), options: [.withoutUI])
+        } catch {
+            // Erzwingen nur als zweiter Versuch, direkt per Systemaufruf
+            if force, Darwin.unmount(mountPoint, MNT_FORCE) == 0 {
+                print("[Henga] ⚠️ Aushängen erzwungen: \(mountPoint)")
+            } else {
+                print("[Henga] ❌ Aushängen fehlgeschlagen: \(error.localizedDescription)")
+                throw SynoClientError.networkError("Aushängen fehlgeschlagen: \(error.localizedDescription)")
+            }
         }
         
-        let fm = FileManager.default
         if let contents = try? fm.contentsOfDirectory(atPath: mountPoint), contents.isEmpty {
             try? fm.removeItem(atPath: mountPoint)
             print("[Henga] 🧹 Leeren Mountpoint entfernt: \(mountPoint)")
         }
+        #else
+        throw SynoClientError.networkError("Aushängen wird nur unter macOS unterstützt")
+        #endif
     }
 }

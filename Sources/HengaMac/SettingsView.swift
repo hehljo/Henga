@@ -164,6 +164,7 @@ struct ProfileDetailEditView: View {
     @State private var detectionError: String?
     @State private var copiedToClipboard = false
     @State private var showSavedNotice = false
+    @State private var passwordSaveFailed = false
     
     var body: some View {
         Form {
@@ -291,15 +292,18 @@ struct ProfileDetailEditView: View {
                             onDelete()
                         }
                         Spacer()
-                        if showSavedNotice {
+                        if passwordSaveFailed {
+                            Text("Passwort nicht gespeichert!")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        } else if showSavedNotice {
                             Text("Gespeichert!")
                                 .font(.caption)
                                 .foregroundColor(.green)
                         }
                         Button(String(localized: "btn_save", defaultValue: "Speichern")) {
-                            if !password.isEmpty {
-                                _ = KeychainHelper.shared.savePassword(password, for: profile.username)
-                            }
+                            passwordSaveFailed = !password.isEmpty
+                                && !KeychainHelper.shared.savePassword(password, for: profile.username)
                             onSave(profile)
                             showSavedNotice = true
                             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -351,9 +355,8 @@ struct ProfileDetailEditView: View {
                     self.otpCode = ""
                     self.isDetectingShares = false
                     
-                    if !self.password.isEmpty {
-                        _ = KeychainHelper.shared.savePassword(self.password, for: self.profile.username)
-                    }
+                    self.passwordSaveFailed = !self.password.isEmpty
+                        && !KeychainHelper.shared.savePassword(self.password, for: self.profile.username)
                     self.onSave(self.profile)
                     self.showSavedNotice = true
                 }
