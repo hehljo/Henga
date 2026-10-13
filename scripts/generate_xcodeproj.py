@@ -6,7 +6,8 @@ import hashlib
 # Build-Settings je Konfiguration, exakt in Xcodes Schreibweise (Werte roh,
 # inkl. Anfuehrungszeichen). Einzige Quelle: Aenderungen hier eintragen, dann
 # neu generieren; `--check` meldet Drift gegen die eingecheckte project.pbxproj.
-APP_BUILD_NUMBER = "3"
+APP_BUILD_NUMBER = "4"
+APP_MARKETING_VERSION = "1.1"
 APP_DEBUG_SETTINGS = {
     'ASSETCATALOG_COMPILER_APPICON_NAME': 'AppIcon',
     'CODE_SIGN_ENTITLEMENTS': 'Sources/HengaMac/App.entitlements',
@@ -33,7 +34,7 @@ APP_DEBUG_SETTINGS = {
     'INFOPLIST_KEY_CFBundleDisplayName': 'Henga',
     'INFOPLIST_KEY_LSApplicationCategoryType': '"public.app-category.utilities"',
     'LD_RUNPATH_SEARCH_PATHS': ['"$(inherited)"', '"@executable_path/../Frameworks"'],
-    'MARKETING_VERSION': '1.0',
+    'MARKETING_VERSION': APP_MARKETING_VERSION,
     'PRODUCT_BUNDLE_IDENTIFIER': 'com.hehljo.Henga',
     'PRODUCT_NAME': '"$(TARGET_NAME)"',
     'PROVISIONING_PROFILE_SPECIFIER': '""',
@@ -111,7 +112,7 @@ APP_RELEASE_SETTINGS = {
     'INFOPLIST_KEY_CFBundleDisplayName': 'Henga',
     'INFOPLIST_KEY_LSApplicationCategoryType': '"public.app-category.utilities"',
     'LD_RUNPATH_SEARCH_PATHS': ['"$(inherited)"', '"@executable_path/../Frameworks"'],
-    'MARKETING_VERSION': '1.0',
+    'MARKETING_VERSION': APP_MARKETING_VERSION,
     'PRODUCT_BUNDLE_IDENTIFIER': 'com.hehljo.Henga',
     'PRODUCT_NAME': '"$(TARGET_NAME)"',
     'PROVISIONING_PROFILE_SPECIFIER': '""',
