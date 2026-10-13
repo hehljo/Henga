@@ -14,13 +14,7 @@ public struct ActiveMountInfo: Identifiable, Equatable, Sendable {
         self.mountPoint = mountPoint
         self.fileSystemType = fileSystemType
     }
-    
-    /// Prüft ob diese Verbindung zu einem bestimmten Share (z.B. "/Daten" oder "Daten") gehört
-    public func matches(shareName: String) -> Bool {
-        let clean = shareName.trimmingCharacters(in: CharacterSet(charactersIn: "/ ")).lowercased()
-        let urlLower = serverURL.lowercased()
-        return urlLower.hasSuffix("/\(clean)") || urlLower.contains("/\(clean)@")
-    }
+
 }
 
 public protocol MountExecutor: Sendable {

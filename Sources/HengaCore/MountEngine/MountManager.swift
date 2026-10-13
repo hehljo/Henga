@@ -36,10 +36,9 @@ public actor MountManager {
             for share in profile.shares {
                 let targetPath = MountPointSanitizer.resolveMountPoint(for: share)
                 
-                // Erkennt sowohl den Zielpfad als auch bestehende /Volumes Mounts
-                let existingMount = activeMounts.first { 
-                    $0.mountPoint == targetPath || $0.matches(shareName: share.cleanRemotePath) 
-                }
+                // Nur der eigene Zielpfad zählt: eine fremde Einbindung derselben Freigabe
+                // (z.B. ~/nas_Backup) ist für die Sandbox weder erreichbar noch Hengas Mount
+                let existingMount = activeMounts.first { $0.mountPoint == targetPath }
                 let isMounted = existingMount != nil
                 let effectivePath = existingMount?.mountPoint ?? targetPath
                 
@@ -72,7 +71,7 @@ public actor MountManager {
         let activeMounts = await executor.listMountedVolumes()
         
         // 1. Bereits am Ziel gemountet?
-        if let existing = activeMounts.first(where: { $0.mountPoint == targetPath || $0.matches(shareName: share.cleanRemotePath) }) {
+        if let existing = activeMounts.first(where: { $0.mountPoint == targetPath }) {
             print("[Henga] ℹ️ Freigabe '\(share.name)' ist bereits unter \(existing.mountPoint) gemountet.")
             var status = statuses[share.id] ?? ShareRuntimeStatus(share: share, profileId: profile.id, state: .mounted, mountPoint: existing.mountPoint)
             status.state = .mounted
@@ -111,24 +110,10 @@ public actor MountManager {
         }
     }
     
-    /// Hängt eine Freigabe aus (auch alte /Volumes Mounts)
+    /// Hängt eine Freigabe aus – nur Hengas eigenen Mountpunkt, nie fremde Einbindungen
     public func unmount(share: ShareMount, profileId: UUID, force: Bool = false) async throws {
         let targetPath = MountPointSanitizer.resolveMountPoint(for: share)
-        let activeMounts = await executor.listMountedVolumes()
-        
-        // Finde alle Pfade, auf denen dieses Share liegt (neuer Pfad + alter /Volumes Pfad)
-        var pathsToUnmount: [String] = []
-        if activeMounts.contains(where: { $0.mountPoint == targetPath }) {
-            pathsToUnmount.append(targetPath)
-        }
-        for m in activeMounts where m.matches(shareName: share.cleanRemotePath) {
-            if !pathsToUnmount.contains(m.mountPoint) {
-                pathsToUnmount.append(m.mountPoint)
-            }
-        }
-        if pathsToUnmount.isEmpty {
-            pathsToUnmount.append(targetPath)
-        }
+        let pathsToUnmount = [targetPath]
         
         var status = statuses[share.id] ?? ShareRuntimeStatus(share: share, profileId: profileId, state: .unmounting, mountPoint: targetPath)
         status.state = .unmounting
