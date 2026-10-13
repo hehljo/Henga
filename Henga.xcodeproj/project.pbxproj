@@ -14,6 +14,7 @@
 		383DE941C0426827D9B9E6F5 /* MountAppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E616D012A7E8C600F47D1437 /* MountAppStore.swift */; };
 		3E643F818E9104FCD71FAC76 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDFFF0E7C708CFA4B49D8A74 /* KeychainHelper.swift */; };
 		4881B34700EE51BC0A0E1E13 /* FinderSidebarHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E50E4D63D7DC150B25D28EA5 /* FinderSidebarHelper.swift */; };
+		54717DC9DC0D351A02A4533B /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A665DAEA5E481C2436153F74 /* InfoPlist.xcstrings */; };
 		5D1C76FA290EF0ED3D0DF5AC /* ShareMount.swift in Sources */ = {isa = PBXBuildFile; fileRef = F713869595355A27151FDF39 /* ShareMount.swift */; };
 		64E657077262CE32C8E36618 /* NetworkCompat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 928A99D2601EA756E3EBFE9C /* NetworkCompat.swift */; };
 		65BA7AD62194BB6FC6DFE50D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D1806A2C4B5EC565EF98353 /* SettingsView.swift */; };
@@ -29,7 +30,6 @@
 		D336AD459E329953AE483CF9 /* ProfileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96DD8DA18135056617F806FC /* ProfileManager.swift */; };
 		DC5BB446B3DA31D2E849019F /* ServerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CADF891CFEA2F1CC205534DC /* ServerProfile.swift */; };
 		F090B5FDB61192D84E9E083F /* NetworkReachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = D862F2C4692E1440BB3B88C9 /* NetworkReachability.swift */; };
-		54717DC9DC0D351A02A4533B /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A665DAEA5E481C2436153F74 /* InfoPlist.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +43,7 @@
 		928A99D2601EA756E3EBFE9C /* NetworkCompat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NetworkCompat.swift; path = Sources/HengaCore/Network/NetworkCompat.swift; sourceTree = SOURCE_ROOT; };
 		96DD8DA18135056617F806FC /* ProfileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ProfileManager.swift; path = Sources/HengaCore/Storage/ProfileManager.swift; sourceTree = SOURCE_ROOT; };
 		9930F3384D3FFBF1EEE03CB8 /* LaunchAtLoginHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LaunchAtLoginHelper.swift; path = Sources/HengaMac/LaunchAtLoginHelper.swift; sourceTree = SOURCE_ROOT; };
+		A665DAEA5E481C2436153F74 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = InfoPlist.xcstrings; path = Sources/HengaMac/InfoPlist.xcstrings; sourceTree = SOURCE_ROOT; };
 		BB53CE36A3F7B051B5EBABF3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Sources/HengaMac/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		C01BB37150DE4FB5EBAE6D60 /* SynoSharedFolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SynoSharedFolder.swift; path = Sources/HengaCore/Models/SynoSharedFolder.swift; sourceTree = SOURCE_ROOT; };
 		C25B5663F24B6A31E518F02D /* SynoApiModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SynoApiModels.swift; path = Sources/HengaCore/Network/SynoApiModels.swift; sourceTree = SOURCE_ROOT; };
@@ -58,7 +59,6 @@
 		F5A2027371B4F5E53647DF13 /* MenuBarContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MenuBarContentView.swift; path = Sources/HengaMac/MenuBarContentView.swift; sourceTree = SOURCE_ROOT; };
 		F6DEF94EF82CE608E82C7CE0 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = Sources/HengaMac/Localizable.xcstrings; sourceTree = SOURCE_ROOT; };
 		F713869595355A27151FDF39 /* ShareMount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ShareMount.swift; path = Sources/HengaCore/Models/ShareMount.swift; sourceTree = SOURCE_ROOT; };
-		A665DAEA5E481C2436153F74 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = InfoPlist.xcstrings; path = Sources/HengaMac/InfoPlist.xcstrings; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -232,7 +232,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = G7AU53ARQH;
 				ENABLE_APP_SANDBOX = YES;
@@ -255,7 +255,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hehljo.Henga;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -321,7 +321,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = G7AU53ARQH;
 				ENABLE_APP_SANDBOX = YES;
@@ -344,7 +344,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.hehljo.Henga;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

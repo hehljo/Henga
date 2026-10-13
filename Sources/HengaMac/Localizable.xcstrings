@@ -31,9 +31,6 @@
         }
       }
     },
-    "☕ Spenden" : {
-
-    },
     "Alle Freigaben dieses Servers trennen" : {
 
     },
@@ -516,6 +513,9 @@
           }
         }
       }
+    },
+    "Passwort nicht gespeichert!" : {
+
     },
     "Remote Pfad (z.B. video)" : {
 
