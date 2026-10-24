@@ -89,6 +89,10 @@ After installing, click the Henga icon in your menu bar and open **Settings** to
 
 ---
 
+## Privacy
+
+Henga keeps everything on your Mac: server addresses, user names and settings stay local, passwords live in the macOS keychain. The app talks only to the server you enter yourself; there is no account, no analytics, no advertising and no third-party crash reporting. Full privacy policy (German/English): [lupfa.de/datenschutz/henga](https://lupfa.de/datenschutz/henga/) · [lupfa.de/en/privacy/henga](https://lupfa.de/en/privacy/henga/). Imprint: [lupfa.de/impressum](https://lupfa.de/impressum/).
+
 ## Support & Donation
 
 If Henga saves you time and keeps your macOS Finder uncluttered, consider supporting the development:
