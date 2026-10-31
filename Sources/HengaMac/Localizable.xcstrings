@@ -526,13 +526,13 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Henga Einstellungen"
+            "value" : "%@ Einstellungen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Henga Settings"
+            "value" : "%@ Settings"
           }
         }
       }

@@ -172,7 +172,7 @@ struct MenuBarContentView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
-            .help("Henga beenden")
+            .help("\(AppConfig.brandName) beenden")
         }
     }
     
