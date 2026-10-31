@@ -6,6 +6,18 @@ import hashlib
 # Build-Settings je Konfiguration, exakt in Xcodes Schreibweise (Werte roh,
 # inkl. Anfuehrungszeichen). Einzige Quelle: Aenderungen hier eintragen, dann
 # neu generieren; `--check` meldet Drift gegen die eingecheckte project.pbxproj.
+def _brand_name() -> str:
+    """Anzeigename aus der einzigen Markenquelle (AppConfig.brandName), nie getippt."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    path = os.path.join(root, "Sources", "HengaCore", "Config", "AppConfig.swift")
+    with open(path, encoding="utf-8") as fh:
+        match = re.search(r'static let brandName = "([^"\\]+)"', fh.read())
+    if not match:
+        sys.exit(f"brandName in {path} nicht gefunden")
+    return match.group(1)
+
+
+BRAND_NAME = _brand_name()
 APP_BUILD_NUMBER = "5"
 APP_MARKETING_VERSION = "1.1"
 APP_DEBUG_SETTINGS = {
@@ -31,7 +43,7 @@ APP_DEBUG_SETTINGS = {
     'ENABLE_RESOURCE_ACCESS_USB': 'NO',
     'GENERATE_INFOPLIST_FILE': 'NO',
     'INFOPLIST_FILE': 'Sources/HengaMac/Info.plist',
-    'INFOPLIST_KEY_CFBundleDisplayName': 'Henga',
+    'INFOPLIST_KEY_CFBundleDisplayName': BRAND_NAME,
     'INFOPLIST_KEY_LSApplicationCategoryType': '"public.app-category.utilities"',
     'LD_RUNPATH_SEARCH_PATHS': ['"$(inherited)"', '"@executable_path/../Frameworks"'],
     'MARKETING_VERSION': APP_MARKETING_VERSION,
@@ -109,7 +121,7 @@ APP_RELEASE_SETTINGS = {
     'ENABLE_RESOURCE_ACCESS_USB': 'NO',
     'GENERATE_INFOPLIST_FILE': 'NO',
     'INFOPLIST_FILE': 'Sources/HengaMac/Info.plist',
-    'INFOPLIST_KEY_CFBundleDisplayName': 'Henga',
+    'INFOPLIST_KEY_CFBundleDisplayName': BRAND_NAME,
     'INFOPLIST_KEY_LSApplicationCategoryType': '"public.app-category.utilities"',
     'LD_RUNPATH_SEARCH_PATHS': ['"$(inherited)"', '"@executable_path/../Frameworks"'],
     'MARKETING_VERSION': APP_MARKETING_VERSION,
