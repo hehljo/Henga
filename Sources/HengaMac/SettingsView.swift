@@ -119,7 +119,7 @@ struct SettingsView: View {
                     .font(.system(size: 56))
                     .foregroundColor(.accentColor)
                 
-                Text(String(localized: "settings_title", defaultValue: "Henga Einstellungen"))
+                Text(String(format: String(localized: "settings_title", defaultValue: "%@ Einstellungen"), AppConfig.brandName))
                     .font(.title2)
                     .fontWeight(.bold)
                 
