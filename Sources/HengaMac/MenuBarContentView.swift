@@ -113,6 +113,7 @@ struct MenuBarContentView: View {
             }
             .buttonStyle(.borderless)
             .help("Im Finder öffnen (Hub-Ordner)")
+            .accessibilityLabel("Ordner im Finder öffnen")
             
             // 2. Ausgewählte Freigaben verbinden
             Button {
@@ -124,6 +125,7 @@ struct MenuBarContentView: View {
             }
             .buttonStyle(.borderless)
             .help("Freigaben dieses Servers verbinden")
+            .accessibilityLabel("Verbinden")
             
             // 3. Freigaben dieses Servers trennen
             Button {
@@ -135,6 +137,7 @@ struct MenuBarContentView: View {
             }
             .buttonStyle(.borderless)
             .help("Alle Freigaben dieses Servers trennen")
+            .accessibilityLabel("Trennen")
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
@@ -166,6 +169,7 @@ struct MenuBarContentView: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             .help("Status aller Server und Freigaben aktualisieren")
+            .accessibilityLabel("Aktualisieren")
             
             Button(String(localized: "menu_quit", defaultValue: "Beenden")) {
                 NSApplication.shared.terminate(nil)
